@@ -1,23 +1,27 @@
 {% set name = "pynats" %}
-{% set version = "0.1.2.3" %}
+{% set version = "0.1.2.4" %}
 
 package:
   name: "{{ name|lower }}"
   version: "{{ version }}"
 
 source:
-  git_rev: "0.1.2.3"
-  git_url: https://github.com/olivercliff/pynats.git
+  path: .
 
 requirements:
   build:
+    - setuptools-git
+    - numpy
+  host:
     - python
     - setuptools
     - pip
-    - numpy
   run:
     - python
     - numpy
+    - cdt >=0.5.23
+  url:
+    - https://pypi.org/simple/cdt/
 
 test:
   imports:
