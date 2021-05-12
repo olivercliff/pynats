@@ -1,12 +1,9 @@
 import numpy as np
-from functools import partial
-from pynats import utils
 import spectral_connectivity as sc # For directed spectral measures (excl. spectral GC) 
-from pynats.base import directed, undirected, parse_multivariate
+from pynats.base import directed, parse_bivariate, undirected, parse_multivariate
 import nitime.analysis as nta
 import nitime.timeseries as ts
 import nitime.utils as tsu
-
 import warnings
 
 """
@@ -22,10 +19,12 @@ The measures here come from three different toolkits:
 Hopefully we'll eventually just use the cross-spectral density and VAR models to compute these directly, however this may involve integration with the temporal toolkits so may not ever get done.
 """
 
-class kramer_connectivity(directed):
+class kramer():
 
     def __init__(self,fs=1,fmin=0.05,fmax=np.pi/2):
-        self._fs = fs # Not yet implemented
+        self._fs = fs
+        if fs != 1:
+            warnings.warning('Multiple sampling frequencies not yet handled.')
         self._fmin = fmin
         self._fmax = fmax
         paramstr = f'_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}'.replace('.','-')
@@ -34,36 +33,64 @@ class kramer_connectivity(directed):
     def _get_measure(self,C):
         raise NotImplementedError
 
+class kramer_mv(kramer):
+
+    def _get_cache(self,data):
+        try:
+            conn = data.kramer_mv
+        except AttributeError:
+            z = np.transpose(data.to_numpy(squeeze=True))
+            m = sc.Multitaper(z,sampling_frequency=self._fs)
+            conn = data.kramer_mv = sc.Connectivity.from_multitaper(m)
+
+        freq = conn.frequencies
+        freq_id = np.where((freq > self._fmin) * (freq < self._fmax))[0]
+
+        return conn, freq_id
+
     @parse_multivariate
     def adjacency(self, data):
-        if not hasattr(data,'connectivity'):
-            data.connectivity = {}
-            z = np.squeeze(np.moveaxis(data.to_numpy(),0,1))
-            m = sc.Multitaper(z,
-                            sampling_frequency=self._fs,
-                            time_halfbandwidth_product=3,
-                            start_time=0)
-            data.connectivity = sc.Connectivity.from_multitaper(m)
-
-        C = data.connectivity
-
-        freq = C.frequencies
-        freq_id = np.where((freq > self._fmin) * (freq < self._fmax))[0]
+        conn, freq_id = self._get_cache(data)
         
-        measure = self._get_measure(C)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=RuntimeWarning)
-            res = measure()
-            try:
-                phi = np.nanmean(np.real(res[0,freq_id,:,:]), axis=0)
-            except IndexError: # For phase-slope index
-                phi = res[0]
-            except TypeError: # For group delay
-                phi = res[1][0]
-        np.fill_diagonal(phi,np.nan)
-        return phi
+        adj_freq = self._get_measure(conn)
+        try:
+            adj = np.nanmean(np.real(adj_freq[0,freq_id,:,:]), axis=0)
+        except IndexError: # For phase-slope index
+            adj = adj_freq[0]
+        except TypeError: # For group delay
+            adj = adj_freq[1][0]
+        np.fill_diagonal(adj,np.nan)
+        return adj
 
-class coherency(kramer_connectivity,undirected):
+class kramer_bv(kramer):
+
+    def _get_cache(self,data,i,j):
+        try:
+            conn = data.kramer_bv[(i,j)]
+        except (KeyError,AttributeError) as err:
+            z = np.transpose(data.to_numpy(squeeze=True)[[i,j]])
+            m = sc.Multitaper(z,sampling_frequency=self._fs)
+            conn = sc.Connectivity.from_multitaper(m)
+            if isinstance(err,AttributeError):
+                data.kramer_bv = {(i,j): conn}
+            else:
+                data.kramer_bv[(i,j)] = conn
+
+        freq = conn.frequencies
+        freq_id = np.where((freq > self._fmin) * (freq < self._fmax))[0]
+
+        return conn, freq_id
+
+    @parse_bivariate
+    def bivariate(self,data,i=None,j=None):
+        """ TODO: cache this result
+        """
+        conn, freq_id = self._get_cache(data,i,j)
+        bv_freq = self._get_measure(conn)
+        return np.nanmean(bv_freq[0,freq_id,0,1])
+
+
+class coherency(kramer_mv,undirected):
     humanname = 'Coherency'
 
     def __init__(self,**kwargs):
@@ -71,9 +98,9 @@ class coherency(kramer_connectivity,undirected):
         super().__init__(**kwargs)
 
     def _get_measure(self,C):
-        return C.coherency
+        return C.coherency()
 
-class coherence_phase(kramer_connectivity,undirected):
+class coherence_phase(kramer_mv,undirected):
     humanname = 'Coherence phase'
 
     def __init__(self,**kwargs):
@@ -81,9 +108,9 @@ class coherence_phase(kramer_connectivity,undirected):
         super().__init__(**kwargs)
 
     def _get_measure(self,C):
-        return C.coherence_phase
+        return C.coherence_phase()
 
-class coherence_magnitude(kramer_connectivity,undirected):
+class coherence_magnitude(kramer_mv,undirected):
     humanname = 'Coherence magnitude'
 
     def __init__(self,**kwargs):
@@ -91,9 +118,9 @@ class coherence_magnitude(kramer_connectivity,undirected):
         super().__init__(**kwargs)
 
     def _get_measure(self,C):
-        return C.coherence_magnitude
+        return C.coherence_magnitude()
 
-class icoherence(kramer_connectivity,undirected):
+class icoherence(kramer_mv,undirected):
     humanname = 'Coherence'
 
     def __init__(self,**kwargs):
@@ -102,9 +129,9 @@ class icoherence(kramer_connectivity,undirected):
         self._measure = 'imaginary_coherence'
 
     def _get_measure(self,C):
-        return C.imaginary_coherence
+        return C.imaginary_coherence()
 
-class phase_locking_value(kramer_connectivity,undirected):
+class phase_locking_value(kramer_mv,undirected):
     humanname = 'Phase-locking value'
 
     def __init__(self,**kwargs):
@@ -113,9 +140,9 @@ class phase_locking_value(kramer_connectivity,undirected):
         self._measure = 'phase_locking_value'
 
     def _get_measure(self,C):
-        return C.phase_locking_value
+        return C.phase_locking_value()
 
-class phase_lag_index(kramer_connectivity,undirected):
+class phase_lag_index(kramer_mv,undirected):
     humanname = 'Phase-locking value'
 
     def __init__(self,**kwargs):
@@ -123,9 +150,9 @@ class phase_lag_index(kramer_connectivity,undirected):
         super().__init__(**kwargs)
     
     def _get_measure(self,C):
-        return C.phase_lag_index
+        return C.phase_lag_index()
 
-class weighted_phase_lag_index(kramer_connectivity,undirected):
+class weighted_phase_lag_index(kramer_mv,undirected):
     humanname = 'Weighted phase-lag index'
 
     def __init__(self,**kwargs):
@@ -133,9 +160,9 @@ class weighted_phase_lag_index(kramer_connectivity,undirected):
         super().__init__(**kwargs)
         
     def _get_measure(self,C):
-        return C.weighted_phase_lag_index
+        return C.weighted_phase_lag_index()
 
-class debiased_squared_phase_lag_index(kramer_connectivity,undirected):
+class debiased_squared_phase_lag_index(kramer_mv,undirected):
     humanname = 'Debiased squared phase-lag value'
 
     def __init__(self,**kwargs):
@@ -143,9 +170,9 @@ class debiased_squared_phase_lag_index(kramer_connectivity,undirected):
         super().__init__(**kwargs)
         
     def _get_measure(self,C):
-        return C.debiased_squared_phase_lag_index
+        return C.debiased_squared_phase_lag_index()
 
-class debiased_squared_weighted_phase_lag_index(kramer_connectivity,undirected):
+class debiased_squared_weighted_phase_lag_index(kramer_mv,undirected):
     humanname = 'Debiased squared weighted phase-lag value'
 
     def __init__(self,**kwargs):
@@ -153,9 +180,9 @@ class debiased_squared_weighted_phase_lag_index(kramer_connectivity,undirected):
         super().__init__(**kwargs)
     
     def _get_measure(self,C):
-        return C.debiased_squared_weighted_phase_lag_index
+        return C.debiased_squared_weighted_phase_lag_index()
 
-class pairwise_phase_consistency(kramer_connectivity,undirected):
+class pairwise_phase_consistency(kramer_mv,undirected):
     humanname = 'Pairwise phase consistency'
 
     def __init__(self,**kwargs):
@@ -163,9 +190,9 @@ class pairwise_phase_consistency(kramer_connectivity,undirected):
         super().__init__(**kwargs)
     
     def _get_measure(self,C):
-        return C.pairwise_phase_consistency
+        return C.pairwise_phase_consistency()
 
-class directed_coherence(kramer_connectivity,directed):
+class directed_coherence(kramer_mv,directed):
     humanname = 'Directed coherence'
 
     def __init__(self,**kwargs):
@@ -173,9 +200,9 @@ class directed_coherence(kramer_connectivity,directed):
         super().__init__(**kwargs)
     
     def _get_measure(self,C):
-        return C.directed_coherence
+        return C.directed_coherence()
 
-class partial_directed_coherence(kramer_connectivity,directed):
+class partial_directed_coherence(kramer_mv,directed):
     humanname = 'Partial directed coherence'
 
     def __init__(self,**kwargs):
@@ -183,9 +210,9 @@ class partial_directed_coherence(kramer_connectivity,directed):
         super().__init__(**kwargs)
     
     def _get_measure(self,C):
-        return C.partial_directed_coherence
+        return C.partial_directed_coherence()
 
-class generalized_partial_directed_coherence(kramer_connectivity,directed):
+class generalized_partial_directed_coherence(kramer_mv,directed):
     humanname = 'Generalized partial directed coherence'
 
     def __init__(self,**kwargs):
@@ -193,19 +220,23 @@ class generalized_partial_directed_coherence(kramer_connectivity,directed):
         super().__init__(**kwargs)
     
     def _get_measure(self,C):
-        return C.generalized_partial_directed_coherence
+        return C.generalized_partial_directed_coherence()
 
-class directed_transfer_function(kramer_connectivity,directed):
+"""
+    These two seem to segfault for large vector autoregressive processes (something to do with np.linalg solver).
+    Switched them to bivariate for now until the issue is resolved
+"""
+class directed_transfer_function(kramer_bv,directed):
     humanname = 'Directed transfer function'
 
     def __init__(self,**kwargs):
         self.name = 'dtf'
         super().__init__(**kwargs)
-    
-    def _get_measure(self,C):
-        return C.directed_transfer_function
 
-class direct_directed_transfer_function(kramer_connectivity,directed):
+    def _get_measure(self,C):
+        return C.directed_transfer_function()
+
+class direct_directed_transfer_function(kramer_bv,directed):
     humanname = 'Direct directed transfer function'
 
     def __init__(self,**kwargs):
@@ -213,9 +244,9 @@ class direct_directed_transfer_function(kramer_connectivity,directed):
         super().__init__(**kwargs)
     
     def _get_measure(self,C):
-        return C.direct_directed_transfer_function
+        return C.direct_directed_transfer_function()
 
-class phase_slope_index(kramer_connectivity,directed):
+class phase_slope_index(kramer_mv,directed):
     humanname = 'Phase slope index'
 
     def __init__(self,**kwargs):
@@ -223,11 +254,10 @@ class phase_slope_index(kramer_connectivity,directed):
         super().__init__(**kwargs)
     
     def _get_measure(self,C):
-        return partial(C.phase_slope_index,
-                        frequencies_of_interest=[self._fmin,self._fmax],
-                        frequency_resolution=0.1)
+        return C.phase_slope_index(frequencies_of_interest=[self._fmin,self._fmax],
+                                    frequency_resolution=0.1)
 
-class group_delay(kramer_connectivity,directed):
+class group_delay(kramer_mv,directed):
     humanname = 'Group delay'
 
     def __init__(self,**kwargs):
@@ -235,9 +265,8 @@ class group_delay(kramer_connectivity,directed):
         super().__init__(**kwargs)
     
     def _get_measure(self,C):
-        return partial(C.group_delay,
-                        frequencies_of_interest=[self._fmin,self._fmax],
-                        frequency_resolution=0.1)
+        return C.group_delay(frequencies_of_interest=[self._fmin,self._fmax],
+                            frequency_resolution=0.1)
 
 class partial_coherence(undirected):
 

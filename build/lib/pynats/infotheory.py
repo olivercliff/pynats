@@ -1,8 +1,7 @@
 import jpype as jp
 import numpy as np
 from pynats import utils
-from pynats.base import directed, undirected, parse_univariate, parse_bivariate, positive, real
-from collections import namedtuple
+from pynats.base import directed, undirected, parse_univariate, parse_bivariate, positive
 
 import copy
 import os
@@ -16,7 +15,6 @@ if not jp.isJVMStarted():
     jarloc = os.path.dirname(os.path.abspath(__file__)) + '/lib/jidt/infodynamics.jar'
     print(f'Starting JVM with java class {jarloc}.')
     jp.startJVM(jp.getDefaultJVMPath(), '-ea', '-Djava.class.path=' + jarloc)
-
 
 class jidt_base(positive):
     

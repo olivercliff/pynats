@@ -233,12 +233,49 @@ def test_simple_correlation():
         except AssertionError as e:
             print(f'{m.name} failed simple correlation test: {e}')
 
+def test_group():
+
+    calc = Calculator(labels=['hello','world','friend'])
+    calc.set_group([['hello'],['goodbye']])
+    assert calc.group == 0
+    assert calc.group_name == 'hello'
+    
+    calc.set_group([['hello','world'],['goodbye','world']])
+    assert calc.group == 0
+    assert calc.group_name == 'hello, world'
+
+    calc.set_group([['hello','cruel','world'],['goodbye','world']])
+    assert calc.group is None
+    assert calc.group_name is None
+
+def test_corr_mi():
+    # Load our wrapper
+    from pynats.correlation import pearsonr
+    from pynats.infotheory import mutual_info
+
+    # Load Tuebingen dataset
+    from cdt.data import load_dataset
+    t_data, _ = load_dataset('tuebingen')
+    src, targ = t_data['A']['pair1'], t_data['B']['pair1']
+
+    rcalc = pearsonr(squared=True)
+    micalc = mutual_info(estimator='gaussian')
+    
+    data = np.concatenate((np.atleast_2d(src),np.atleast_2d(targ)),axis=0)
+
+    r2 = rcalc.adjacency(data)[0,1]
+    i = micalc.bivariate(src,targ)
+
+    assert i == pytest.approx(-0.5*np.log(1-r2), rel=1e-1, abs=1e-2), (f'Correlation and MI are not equal: {i} != -0.5 log(1-{r2})')
+
 if __name__ == '__main__':
 
     test_yaml()
     test_load()
+    test_group()
     test_adjacency()
 
+    test_corr_mi()
     test_simple_correlation()
 
     # Some tests from the creator's websites

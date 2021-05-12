@@ -6,12 +6,17 @@ import pandas as pd
 from math import isnan
 from hyppo.time_series import MGCX, DcorrX
 import warnings
-from pynats.base import directed, undirected, parse_bivariate, positive, real
+from pynats.base import directed, undirected, parse_bivariate, unsigned, signed
 
-class coint(undirected,real):
+import importlib
+import scipy.spatial.distance as distance
+from fastdtw import fastdtw
+
+class coint(undirected,unsigned):
     
     humanname = "Cointegration"
     name = "coint"
+    labels = ['unsigned','temporal','undirected','lagged']
 
     def __init__(self,method='johansen',statistic='pvalue'):
         self._method = method
@@ -45,14 +50,20 @@ class coint(undirected,real):
 
         return data.coint[self._statistic][i,j]
 
-class ccm(directed,real):
+class ccm(directed,unsigned):
 
     humanname = "Convergent cross-maping"
     name = "ccm"
+    labels = ['embedding','temporal','directed','lagged','causal']
 
     def __init__(self,statistic='mean'):
         self._statistic = statistic
         self.name = self.name + '_' + statistic
+        if statistic == 'diff':
+            self.issigned = lambda : True
+            self.labels += ['signed']
+        else:
+            self.labels += ['unsigned']
 
     @staticmethod
     def _precompute(data):
@@ -111,12 +122,13 @@ class ccm(directed,real):
 
         return stat
 
-class dcorrx(undirected,positive):
+class dcorrx(undirected,unsigned):
     """ Multi-graph correlation for time series
     """
 
     humanname = "Multi-scale graph correlation"
     name = "dcorrx"
+    labels = ['unsigned','independence','temporal','directed','lagged']
 
     def __init__(self,max_lag=1):
         self._max_lag = max_lag
@@ -131,12 +143,13 @@ class dcorrx(undirected,positive):
             stat, _, _ = DcorrX(max_lag=self._max_lag).test(x, y, reps=0 )
         return stat
 
-class mgcx(undirected,positive):
+class mgcx(undirected,unsigned):
     """ Multi-graph correlation for time series
     """
 
     humanname = "Multi-scale graph correlation"
     name = "mgcx"
+    labels = ['unsigned','independence','temporal','directed','lagged']
 
     def __init__(self,max_lag=1):
         self._max_lag = max_lag
@@ -150,3 +163,19 @@ class mgcx(undirected,positive):
             warnings.simplefilter("ignore")
             stat, _, _ = MGCX(max_lag=self._max_lag).test(x, y, reps=0)
         return stat
+
+class dtw(undirected,unsigned):
+
+    humanname = "Dynamic time warping"
+    name = "dtwx"
+    labels = ['unsigned','distance','temporal','undirected','lagged']
+
+    def __init__(self,metric='euclidean'):
+        self.name = self.name + '_' + metric
+        self._dist = getattr(distance,metric)
+
+    @parse_bivariate
+    def bivariate(self,data,i=None,j=None):
+        z = data.to_numpy(squeeze=True)
+        dist, _ = fastdtw(z[i],z[j],dist=self._dist)
+        return dist

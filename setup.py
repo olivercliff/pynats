@@ -12,7 +12,7 @@ setup(
     #scripts=['bin/script1','bin/script2'],
     package_data={'': ['config.yaml','lib/jidt/infodynamics.jar']},
     include_package_data=True,
-    version='0.1.2.7',
+    version='0.1.2.9',
     description='Network analysis for time series',
     author='Oliver M. Cliff',
     author_email='oliver.m.cliff@gmail.com',
@@ -32,7 +32,7 @@ setup(
         "Topic :: Scientific/Engineering :: Medical Science Apps.",
     ],
     install_requires=['pytest',
-                        'numpy==1.19.5', # Seems like there's a linear algebra issue in version >=1.20.0 (found through spectral_connectivity pkg)
+                        'numpy==1.20.1', 
                         'statsmodels>=0.12.0',
                         'pyyaml>=5.3.1',
                         'seaborn>=0.11.0',

@@ -2,17 +2,18 @@ from nilearn import connectome as fc
 from sklearn import covariance as cov
 from scipy import stats, spatial, signal
 import numpy as np
-from pynats.base import undirected, directed, parse_bivariate, parse_multivariate, positive, real
+from pynats.base import undirected, directed, parse_bivariate, parse_multivariate, signed, unsigned
 from hyppo.independence import MGC, Dcorr, HHG, Hsic
 import warnings
 
-class connectivity(undirected,real):
+class connectivity(undirected,signed):
     """ Base class for (functional) connectivity-based measures 
     
     Information on covariance estimators at: https://scikit-learn.org/stable/modules/covariance.html
     """
 
     humanname = "Pearon's product-moment correlation coefficient"
+    labels = ['correlation','connectivity','unordered','linear','undirected']
 
     _ledoit_wolf = cov.LedoitWolf
     _empirical = cov.EmpiricalCovariance
@@ -24,6 +25,10 @@ class connectivity(undirected,real):
         paramstr = f'_{cov_estimator}'
         if squared:
             paramstr = '-sq' + paramstr
+            self.labels += ['unsigned']
+            self.issigned = lambda : False
+        else:
+            self.labels += ['signed']
         self.name = self.name + paramstr
         self._squared = squared
         self._cov_estimator = eval('self._' + cov_estimator + '()')
@@ -83,9 +88,10 @@ class precision(connectivity):
         self.name = 'prec'
         super(precision,self).__init__('precision',squared=squared,cov_estimator=cov_estimator)
 
-class xcorr(undirected,real):
+class xcorr(undirected,signed):
 
     humanname = "Cross correlation"
+    labels = ['correlation','unordered','lagged','linear','undirected']
 
     def __init__(self,squared=False,statistic='max'):
         self.name = 'xcorr'
@@ -93,7 +99,11 @@ class xcorr(undirected,real):
         self._statistic = statistic
 
         if self._squared:
+            self.issigned = lambda : False
             self.name = self.name + '-sq'
+            self.labels += ['unsigned']
+        else:
+            self.labels += ['signed']
         self.name = self.name + '_' + statistic
     
     @parse_bivariate
@@ -120,37 +130,47 @@ class xcorr(undirected,real):
         else:
             raise TypeError(f'Unknown statistic: {self._statistic}') 
 
-class spearmanr(undirected,real):
+class spearmanr(undirected,signed):
 
     humanname = "Spearman's correlation coefficient"
     name = "spearmanr"
+    labels = ['correlation','unordered','rank','linear','undirected']
 
     def __init__(self,squared=False):
         self._squared = squared
         if squared:
+            self.issigned = lambda : False
             self.name = self.name + '-sq'
+            self.labels += ['unsigned']
+        else:
+            self.labels += ['signed']
     
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):
-        x,y = data.to_numpy()[[i,j]]
+        x, y = data.to_numpy()[[i,j]]
         if self._squared:
             return stats.spearmanr(x,y).correlation ** 2
         else:
             return stats.spearmanr(x,y).correlation
 
-class kendalltau(undirected,real):
+class kendalltau(undirected,signed):
 
     humanname = "Kendall's tau"
     name = "kendalltau"
+    labels = ['correlation','unordered','rank','linear','undirected']
 
     def __init__(self,squared=False):
         self._squared = squared
         if squared:
+            self.issigned = lambda : False
             self.name = self.name + '-sq'
+            self.labels += ['unsigned']
+        else:
+            self.labels += ['signed']
 
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):
-        x,y = data.to_numpy()[[i,j]]
+        x, y = data.to_numpy()[[i,j]]
         if self._squared:
             return stats.kendalltau(x,y).correlation ** 2
         else:
@@ -158,61 +178,65 @@ class kendalltau(undirected,real):
 
 """ TODO: include optional kernels in each method
 """
-class hsic(undirected,positive):
+class hsic(undirected,unsigned):
     """ Hilbert-Schmidt Independence Criterion (Hsic)
     """
 
     humanname = "Hilbert-Schmidt Independence Criterion"
     name = 'hsic'
+    labels = ['independence','unordered','nonlinear','undirected']
 
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):
-        x,y = data.to_numpy()[[i,j]]
+        x, y = data.to_numpy()[[i,j]]
         stat, _ = Hsic().test(x, y, auto=True )
         return stat
 
-class hhg(directed,positive):
+class hhg(directed,unsigned):
     """ Heller-Heller-Gorfine independence criterion
     """
 
     humanname = "Heller-Heller-Gorfine Independence Criterion"
     name = 'hhg'
+    labels = ['independence','unordered','nonlinear','directed']
 
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):
-        x,y = data.to_numpy()[[i,j]]
+        x, y = data.to_numpy()[[i,j]]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             stat, _ = HHG().test(x, y, reps=0)
         return stat
 
-class dcorr(undirected,positive):
+class dcorr(undirected,unsigned):
     """ Correlation of distances
     """
 
     humanname = "Distance correlation"
     name = 'dcorr'
+    labels = ['independence','unordered','nonlinear','undirected']
     
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):
         """
         """
-        x,y = data.to_numpy()[[i,j]]
+        x, y = data.to_numpy()[[i,j]]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             stat, _ = Dcorr().test(x, y, auto=True, reps=0)
         return stat
 
-class mgc(undirected,positive):
+class mgc(undirected,unsigned):
     """ Multi-graph correlation
     """
 
     humanname = "Multi-scale graph correlation"
     name = "mgc"
+    labels = ['independence','unordered','nonlinear','undirected']
 
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):
-        x,y = data.to_numpy()[[i,j]]
+        x, y = data.to_numpy()[[i,j]]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             stat, _, _ = MGC().test(x, y, reps=0 )

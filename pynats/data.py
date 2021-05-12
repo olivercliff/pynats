@@ -5,12 +5,10 @@ Stolen mostly from IDTxL (for now...)
 import numpy as np
 import pandas as pd
 from pynats import utils
-from math import sin, cos, sqrt, fabs
-from numba import jit
 from scipy.stats import zscore
 import os
 from sktime.utils.load_data import load_from_tsfile_to_dataframe
-from sktime.utils.data_container import from_nested_to_2d_array
+from sktime.utils.data_container import from_nested_to_3d_numpy
 
 VERBOSE = False
 
@@ -72,7 +70,7 @@ class Data():
 
     """
 
-    def __init__(self, data=None, dim_order='psr', normalise=True,name=None,n_processes=None,n_observations=None):
+    def __init__(self,data=None,dim_order='ps',normalise=True,name=None,n_processes=None,n_observations=None):
         self.normalise = normalise
         if data is not None:
             dat = self.convert_to_numpy(data)
@@ -161,7 +159,7 @@ class Data():
                 npdat = np.genfromtxt(data,',')
             elif ext == '.ts':
                 tsdat, tsclasses = load_from_tsfile_to_dataframe(data)
-                npdat = from_nested_to_2d_array(tsdat)
+                npdat = from_nested_to_3d_numpy(tsdat)
             else:
                 raise TypeError(f'Unknown filename extension: {ext}')
         else:
@@ -169,7 +167,7 @@ class Data():
 
         return npdat
 
-    def set_data(self, data, dim_order='psr', name=None, n_processes=None, n_observations=None, verbose=False):
+    def set_data(self, data, dim_order='ps', name=None, n_processes=None, n_observations=None, verbose=False):
         """Overwrite data in an existing Data object.
 
         Args:

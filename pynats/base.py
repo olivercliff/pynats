@@ -1,7 +1,6 @@
 import numpy as np
-import math
 from pynats.data import Data
-import copy
+import warnings, copy
 
 """
 Base class for pairwise dependency measurements.
@@ -100,6 +99,31 @@ class directed:
                 A[i,j] = self.bivariate(data,i=i,j=j)
         return A
 
+    def get_group(self,classes):
+        for i, i_cls in enumerate(classes):
+            for j, j_cls in enumerate(classes):
+                if i == j:
+                    continue
+                assert not set(i_cls).issubset(set(j_cls)), (f'Class {i_cls} is a subset of class {j_cls}.')
+
+        self._group = None
+        self._group_name = None
+
+        labset = set(self.labels)
+        matches = [set(cls).issubset(labset) for cls in classes]
+
+        if np.count_nonzero(matches) > 1:
+            warnings.warn(f'More than one match for classes {classes}')
+        else:
+            try:
+                id = np.where(matches)[0][0]
+                self._group = id
+                self._group_name = ', '.join(classes[id])
+                return self._group, self._group_name
+            except (TypeError,IndexError):
+                pass
+        return None
+
 class undirected(directed):
 
     humanname = 'Base class'
@@ -117,10 +141,10 @@ class undirected(directed):
         return A
 
 # Maybe this would be more pythonic as decorators or something?
-class positive:
-    def ispositive(self):
+class signed:
+    def issigned(self):
         return True
-
-class real:
-    def ispositive(self):
+        
+class unsigned:
+    def issigned(self):
         return False

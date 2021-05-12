@@ -118,6 +118,10 @@
   dcorrx:
     - max_lag: 5
 
+  dtw:
+    - metric: 'euclidean'
+    - metric: 'minkowski'
+
 # Measures that analyse in the frequency-domain (see Schoegl and Supp, 2006)
 .spectral:
 
@@ -178,6 +182,14 @@
     - estimator: kernel
 
   causal_entropy: # No theiler window yet
+
+    - estimator: gaussian
+
+    - estimator: kozachenko
+
+    - estimator: kernel
+
+  crossmap_entropy: # No theiler window yet
 
     - estimator: gaussian
 
