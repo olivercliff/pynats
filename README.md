@@ -6,7 +6,7 @@ Python-based network analysis for time series.
 
 ## Getting started
 
-When it's ready you'll be able to download it via pip
+When it's ready you'll be able to download it via `pip`
 > pip install pynats
 
 ## Issues
