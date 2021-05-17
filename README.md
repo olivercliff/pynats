@@ -114,7 +114,7 @@ The shorthand for each parameter (LHS of the table) is appended to the function 
 | Parameter | Description |
 | -------- | ----------- |
 | `sq` | Square the output |
-| `mean` | Take the mean of the output sequence (for functions that output sequences, e.g., `xcorr` and `ccm`) |
+| `mean` | Take the mean of the output sequence (for functions such as `xcorr` and `ccm`) |
 | `max` | Take the max of the output sequence |
 | `diff` | Take the mean of the difference between two output sequences |
 | `empirical` | Maximum likelihood estimator for covariance matrix (non rank-based correlation coefficients only) |
@@ -129,11 +129,11 @@ The shorthand for each parameter (LHS of the table) is appended to the function 
 | `kraskov_NN-X` | Kraskov-Strogaz-Grassberger estimator for mutual information-based measures with nearest-neighbours `X` (default: `4`) |
 | `gaussian` | Gaussian estimator for information-theoretic measures |
 | `kozachenko` | Kozachenko estimator for entropy-based measures |
-| `k-X` | history length of target process for transfer entropy/Granger causality (default: `1`) |
-| `kt-X` | time delay of target process for transfer entropy/Granger causality (default: `1`) |
-| `l-X` | history length of source process for transfer entropy/Granger causality (default: `1`) |
-| `lt-X` | time delay of source process for transfer entropy/Granger causality (default: `1`) |
-| `DCE` | Dynamic correlation exclusion (a.k.a Theiler Window) for information-theoretic measures (not yet suitable for gaussian estimator) |
+| `k-X` | History length of target process for transfer entropy/Granger causality (default: `1`) |
+| `kt-X` | Time delay of target process for transfer entropy/Granger causality (default: `1`) |
+| `l-X` | History length of source process for transfer entropy/Granger causality (default: `1`) |
+| `lt-X` | Time delay of source process for transfer entropy/Granger causality (default: `1`) |
+| `DCE` | Dynamic correlation exclusion (a.k.a Theiler Window) for information-theoretic measures (not yet suitable for Gaussian estimator) |
 | `fs-X` | Sampling frequency of `X` (default: `1`) |
 | `fmin-X` | Minimum frequency for averaging spectral/wavelet measures (default: `0`) |
 | `fmax-X` | Maximum frequency for averaging  spectral/wavelet measures (default: `nyquist = fs/2`) |
