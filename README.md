@@ -68,6 +68,7 @@ Measures that assume the temporal precendence in time series to be important in 
 ### Spectral measures
 
 Measures that involve a Fourier or wavelet transformation prior to computing statistics.
+Each statistic is averaged over some frequency (and time, for wavelet transformations) range specified by the parameters (see below).
 
 | Function | Description |
 | -------- | ----------- |
