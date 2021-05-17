@@ -85,7 +85,6 @@
   igci:
 
   reci:
-
   
 # Measures that analyse in the time-domain
 .temporal:
@@ -127,48 +126,266 @@
 
   # Coherence (ordinal or squared? real components of the coherence)
   coherency:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   coherence_phase:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   coherence_magnitude:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   # Coherence (ordinal or squared? imaginary components of the coherence)
   icoherence:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   phase_slope_index:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   phase_locking_value:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   phase_lag_index:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   weighted_phase_lag_index:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   debiased_squared_phase_lag_index:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   debiased_squared_weighted_phase_lag_index:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   pairwise_phase_consistency:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   directed_transfer_function:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   directed_coherence:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   partial_directed_coherence:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   generalized_partial_directed_coherence:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   direct_directed_transfer_function:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
   group_delay:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
     
   spectral_granger:
     - fs: 1
 
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
+
     - fs: 1
+      order: 1
+
+    - fmin: 0
+      fmax: 0.25
+      order: 1
+
+    - fmin: 0.25
+      fmax: 0.5
       order: 1
 
     - fs: 1
       order: 20
+
+    - fmin: 0
+      fmax: 0.25
+      order: 20
+
+    - fmin: 0.25
+      fmax: 0.5
+      order: 20
+
+# Measures that analyse in the wavlet-domain (only Mortlet wavelet's at the moment)
+.wavelet:
+
+  # Coherence (ordinal or squared? real components of the coherence)
+  coherency:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
+
+  # Coherence (ordinal or squared? imaginary components of the coherence)
+  icoherence:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
+
+  phase_locking_value:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
+
+  pairwise_phase_consistency:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
+
+  phase_lag_index:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
+
+  debiased_squared_phase_lag_index:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
+
+  weighted_phase_lag_index:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
+
+  debiased_weighted_squared_phase_lag_index:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
 
 # Information-theoretic measures
 .infotheory:

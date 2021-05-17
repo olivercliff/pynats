@@ -362,7 +362,6 @@ class crossmap_entropy(jidt_base,directed):
         for i in range(2,k):
             src_past = np.append(src_past,np.expand_dims(src[k-i:-i],axis=1),axis=1)
 
-
         joint = np.concatenate([src_past,np.expand_dims(targ_future,axis=1)], axis=1)
 
         self._entropy_calc.initialise(joint.shape[1])

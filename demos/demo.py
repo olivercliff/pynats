@@ -3,8 +3,6 @@ import numpy as np
 
 from pynats.calculator import Calculator
 from pynats.data import Data
-import pynats.plot as natplt
-
 import matplotlib.pyplot as plt
 
 # Generate three random sequences (not time series yet)
@@ -28,14 +26,13 @@ for i in range(1,M):
 #   - normalise z-scores the data
 data = Data(procs, dim_order='ps', normalise=True)
 
-
-natplt.plot_spacetime(data)
+# natplt.plot_spacetime(data)
 
 # Let's create an unnamed calculator
 calc = Calculator(dataset=data)
 
 calc.compute()
 
-natplt.clustermap(calc)
+# natplt.clustermap(calc)
 
 plt.show()

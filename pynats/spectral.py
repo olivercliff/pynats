@@ -9,19 +9,21 @@ import warnings
 """
 The measures here come from three different toolkits:
 
-    - Simple undirected measurements generally come from MNE (coherence, imaginary coherence, phase slope index)
-        - This is not true anymore. I originally used this b/c they had additional (short-time fourier and Mortlet)
-            ways of computing the spectral measures, but the use of epochs, etc. seemed dissimilar to literature.
-            Need to look into this.
-    - Now, most measures come from Eden Kramer Lab's spectral_connectivity toolkit
-    - Spectral Granger causality comes from nitime (since Kramer's version doesn't optimise AR order using, e.g., BIC)
+    - Most measures come from Eden Kramer Lab's spectral_connectivity toolkit
+    - Spectral Granger causality comes from nitime (since Kramer's version doesn't optimise AR order, e.g., using BIC).
 
-Hopefully we'll eventually just use the cross-spectral density and VAR models to compute these directly, however this may involve integration with the temporal toolkits so may not ever get done.
+    - [Outdated] Simple undirected measurements generally come from MNE (coherence, imaginary coherence, phase slope index)
+        - I originally used this b/c they had additional (short-time fourier and Mortlet) ways of computing the spectral measures, but Kramer has more measures. May be worth putting both in and ensuring they're identical.
+
+Granger causality could be computed from the VAR models in the infotheory module but this involves pretty intense integration with the temporal toolkits so may not ever get done.
 """
 
 class kramer(unsigned):
 
-    def __init__(self,fs=1,fmin=0.05,fmax=np.pi/2):
+    def __init__(self,fs=1,fmin=0,fmax=None):
+        if fmax is None:
+            fmax = fs/2
+            
         self._fs = fs
         if fs != 1:
             warnings.warning('Multiple sampling frequencies not yet handled.')
@@ -44,7 +46,7 @@ class kramer_mv(kramer):
             conn = data.kramer_mv = sc.Connectivity.from_multitaper(m)
 
         freq = conn.frequencies
-        freq_id = np.where((freq > self._fmin) * (freq < self._fmax))[0]
+        freq_id = np.where((freq >= self._fmin) * (freq <= self._fmax))[0]
 
         return conn, freq_id
 
@@ -88,7 +90,6 @@ class kramer_bv(kramer):
         conn, freq_id = self._get_cache(data,i,j)
         bv_freq = self._get_measure(conn)
         return np.nanmean(bv_freq[0,freq_id,0,1])
-
 
 class coherency(kramer_mv,undirected):
     humanname = 'Coherency'
@@ -148,7 +149,7 @@ class phase_locking_value(kramer_mv,undirected):
         return C.phase_locking_value()
 
 class phase_lag_index(kramer_mv,undirected):
-    humanname = 'Phase-locking value'
+    humanname = 'Phase-lag index'
     labels = ['unsigned','spectral','undirected']
 
     def __init__(self,**kwargs):
@@ -170,7 +171,7 @@ class weighted_phase_lag_index(kramer_mv,undirected):
         return C.weighted_phase_lag_index()
 
 class debiased_squared_phase_lag_index(kramer_mv,undirected):
-    humanname = 'Debiased squared phase-lag value'
+    humanname = 'Debiased squared phase-lag index'
     labels = ['unsigned','spectral','undirected']
 
     def __init__(self,**kwargs):
@@ -181,7 +182,7 @@ class debiased_squared_phase_lag_index(kramer_mv,undirected):
         return C.debiased_squared_phase_lag_index()
 
 class debiased_squared_weighted_phase_lag_index(kramer_mv,undirected):
-    humanname = 'Debiased squared weighted phase-lag value'
+    humanname = 'Debiased squared weighted phase-lag index'
     labels = ['unsigned','spectral','undirected']
 
     def __init__(self,**kwargs):
@@ -318,7 +319,7 @@ class spectral_granger(directed,unsigned):
     name = 'sgc'
     labels = ['unsigned','embedding','spectral','directed','lagged']
 
-    def __init__(self,fs=1,fmin=0.05,fmax=np.pi/2,order=None,max_order=50):
+    def __init__(self,fs=1,fmin=0.0,fmax=0.5,order=None,max_order=50):
         self._fs = fs # Not yet implemented
         self._fmin = fmin
         self._fmax = fmax
@@ -336,7 +337,7 @@ class spectral_granger(directed,unsigned):
         time_series = ts.TimeSeries(pdata, sampling_interval=1)
         G = nta.GrangerAnalyzer(time_series, order=self._order, max_order=self._max_order)
         try:
-            freq_idx_G = np.where((G.frequencies > self._fmin) * (G.frequencies < self._fmax))[0]
+            freq_idx_G = np.where((G.frequencies >= self._fmin) * (G.frequencies <= self._fmax))[0]
         
             gc_triu = np.mean(G.causality_xy[:,:,freq_idx_G], -1)
             gc_tril = np.mean(G.causality_yx[:,:,freq_idx_G], -1)

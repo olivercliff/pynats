@@ -553,7 +553,14 @@ class CorrelationFrame():
         if not hasattr(self,'_ddf'):
             self._ddf = convert_mdf_to_ddf(self.mdf)
         return self._ddf
-        
+    
+    @property
+    def n_datasets(self):
+        return self.ddf.shape[1]
+
+    @property
+    def n_measures(self):
+        return self.mdf.shape[1]
 
     @property
     def mlabels(self):
