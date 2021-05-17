@@ -137,4 +137,5 @@ The shorthand for each parameter (LHS of the table) is appended to the function 
 | `fs-X` | Sampling frequency of `X` (default: `1`) |
 | `fmin-X` | Minimum frequency for averaging spectral/wavelet measures (default: `0`) |
 | `fmax-X` | Maximum frequency for averaging  spectral/wavelet measures (default: `nyquist = fs/2`) |
+| `order-X` | AR Order for parametric spectral Granger causality, choose `None` for optimisation by BIC (default: `None`) |
 | `cwt` | Continuous wavelet transformation (for spectral measures) |
