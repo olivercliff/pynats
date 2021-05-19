@@ -89,6 +89,7 @@ Measures that involve a Fourier or wavelet transformation prior to computing sta
 | `gd` | Group delay |
 | `sgc` | Spectral Granger causality |
 | `ppc` | Pairwise-phase consistency |
+| `pec` | Power envelope correlation |
 
 ### Information-theoretic measures
 

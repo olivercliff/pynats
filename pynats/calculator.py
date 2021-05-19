@@ -4,6 +4,7 @@ import pandas as pd
 import copy, yaml, importlib, time, warnings, os
 from tqdm import tqdm
 from collections import Counter
+from copy import deepcopy
 
 # From this package
 from .data import Data
@@ -262,9 +263,16 @@ class Calculator():
             except (TypeError,IndexError):
                 pass
 
-    # TODO - merge two calculators (e.g., to include missing/decentralised data or measures)
+    # Merge two calculators (to include additional statistics)
     def merge(self,other):
-        raise NotImplementedError
+        if self.name is not other.name:
+            raise TypeError(f'Calculator name does do not match. Aborting merge.')
+        
+        for attr in ['name','n_processes','n_observations']:
+            selfattr = getattr(self.dataset,attr)
+            otherattr = getattr(other.dataset,attr)
+            if selfattr is not otherattr:
+                raise TypeError(f'Attribute {attr} does not match between calculators ({selfattr} != {otherattr})')
 
     def flatten(self,transformer=None):
         """ Gives a measure-by-edges matrix for correlations, etc.

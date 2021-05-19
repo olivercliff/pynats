@@ -310,6 +310,32 @@
       fmax: 0.5
       order: 20
 
+  # Power envelope correlation
+  envelope_correlation:
+    - orth: False
+      log: False
+      absolute: False
+
+    - orth: True
+      log: False
+      absolute: False
+
+    - orth: False
+      log: True
+      absolute: False
+
+    - orth: True
+      log: True
+      absolute: False
+
+    - orth: True
+      log: False
+      absolute: True
+
+    - orth: True
+      log: True
+      absolute: True
+
 # Measures that analyse in the wavlet-domain (only Mortlet wavelet's at the moment)
 .wavelet:
 
@@ -379,6 +405,15 @@
       fmax: 0.5
 
   debiased_weighted_squared_phase_lag_index:
+    - fs: 1
+
+    - fmin: 0
+      fmax: 0.25
+
+    - fmin: 0.25
+      fmax: 0.5
+
+  phase_slope_index:
     - fs: 1
 
     - fmin: 0

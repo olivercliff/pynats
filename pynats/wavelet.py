@@ -1,4 +1,4 @@
-from mne.connectivity import spectral_connectivity
+import mne.connectivity as mnec
 from pynats.base import directed, parse_bivariate, undirected, parse_multivariate, unsigned
 import numpy as np
 import warnings
@@ -20,8 +20,11 @@ class mne(unsigned):
         self.name = self.name + paramstr
 
         # Probably not good practice
-        if self._measure not in mne._measure_list:
-            mne._measure_list.append(self._measure)
+        try:
+            if self._measure not in mne._measure_list:
+                mne._measure_list.append(self._measure)
+        except AttributeError:
+            pass
 
     def _get_measure(self,C):
         raise NotImplementedError
@@ -34,7 +37,7 @@ class mne(unsigned):
             z = np.moveaxis(data.to_numpy(),2,0)
 
             freqs = np.linspace(0.2, 0.5, 10)
-            conn, freq, _, _, _ = spectral_connectivity(
+            conn, freq, _, _, _ = mnec.spectral_connectivity(
                     data=z, method=mne._measure_list, mode='cwt_morlet',
                     sfreq=self._fs, mt_adaptive=True, cwt_freqs=freqs,
                     verbose='WARNING')
@@ -49,7 +52,7 @@ class mne(unsigned):
     @parse_multivariate
     def adjacency(self, data):
         adj_freq, freq_id = self._get_cache(data)
-        adj = np.nanmean(np.real(adj_freq[:,:,freq_id]), axis=(2,3))
+        adj = np.nanmean(np.real(adj_freq[...,freq_id]), axis=(2,3))
         np.fill_diagonal(adj,np.nan)
         return adj
 
@@ -124,3 +127,38 @@ class debiased_weighted_squared_phase_lag_index(mne,undirected):
         self.name = 'cwt_dwspli'
         self._measure = 'wpli2_debiased'
         super().__init__(**kwargs)
+
+class phase_slope_index(mne,directed):
+    humanname = 'Phase slope index (wavelet)'
+    labels = ['unsigned','wavelet','undirected']
+
+    def __init__(self,**kwargs):
+        self.name = 'cwt_psi'
+        super().__init__(**kwargs)
+
+    def _get_cache(self,data):
+        try:
+            psi = data.mne_psi['psi']
+            freq = data.mne_psi['freq']
+        except AttributeError:
+            z = np.moveaxis(data.to_numpy(),2,0)
+
+            freqs = np.linspace(0.2, 0.5, 10)
+            psi, freq, _, _, _ = mnec.phase_slope_index(
+                    data=z,mode='cwt_morlet',sfreq=self._fs,
+                    mt_adaptive=True, cwt_freqs=freqs,
+                    verbose='WARNING')
+            freq = freq[0]
+            data.mne_psi = dict(psi=psi,freq=freq)
+
+        # freq = conn.frequencies
+        freq_id = np.where((freq >= self._fmin) * (freq <= self._fmax))[0]
+
+        return psi, freq_id
+
+    @parse_multivariate
+    def adjacency(self, data):
+        adj_freq, freq_id = self._get_cache(data)
+        adj = np.nanmean(np.real(adj_freq[...,freq_id]), axis=(2,3))
+        np.fill_diagonal(adj,np.nan)
+        return adj

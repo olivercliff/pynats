@@ -32,10 +32,10 @@ setup(
         "Topic :: Scientific/Engineering :: Medical Science Apps.",
     ],
     install_requires=['pytest',
+                        'scipy>=1.6.3'
                         'numpy==1.20.1', 
                         'statsmodels>=0.12.0',
                         'pyyaml>=5.3.1',
-                        'seaborn>=0.11.0',
                         'tqdm>=4.50.2',
                         'nilearn>=0.6.2',
                         'nitime==0.9',
@@ -48,5 +48,4 @@ setup(
                         'umap-learn>=0.4.6',
                         'torch>=1.7.0',
                         'cdt==0.5.23']
-                 
 )

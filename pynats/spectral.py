@@ -4,6 +4,7 @@ from pynats.base import directed, parse_bivariate, undirected, parse_multivariat
 import nitime.analysis as nta
 import nitime.timeseries as ts
 import nitime.utils as tsu
+from mne.connectivity import envelope_correlation as pec
 import warnings
 
 """
@@ -333,14 +334,14 @@ class spectral_granger(directed,unsigned):
         z = data.to_numpy(squeeze=True)
         m = data.n_processes
  
-        pdata = tsu.percent_change(z)
-        time_series = ts.TimeSeries(pdata, sampling_interval=1)
+        # pdata = tsu.percent_change(z)
+        time_series = ts.TimeSeries(z, sampling_interval=1)
         G = nta.GrangerAnalyzer(time_series, order=self._order, max_order=self._max_order)
         try:
             freq_idx_G = np.where((G.frequencies >= self._fmin) * (G.frequencies <= self._fmax))[0]
         
-            gc_triu = np.mean(G.causality_xy[:,:,freq_idx_G], -1)
-            gc_tril = np.mean(G.causality_yx[:,:,freq_idx_G], -1)
+            gc_triu = np.mean(G.causality_xy[...,freq_idx_G], -1)
+            gc_tril = np.mean(G.causality_yx[...,freq_idx_G], -1)
 
             gc = np.empty((m,m))
             triu_id = np.triu_indices(m)
@@ -353,3 +354,27 @@ class spectral_granger(directed,unsigned):
             gc[:] = np.NaN
 
         return gc
+
+class envelope_correlation(undirected):
+    humanname = 'Phase slope index (wavelet)'
+    labels = ['unsigned','wavelet','undirected']
+
+    def __init__(self,orth=False,log=False,absolute=False):
+        self.name = 'pec'
+        self._orth = False
+        if orth:
+            self._orth = 'pairwise'
+            self.name += '_orth'
+        self._log = log
+        if log:
+            self.name += '_log'
+        self._absolute = absolute
+        if absolute:
+            self.name += '_abs'
+
+    @parse_multivariate
+    def adjacency(self, data):
+        z = np.moveaxis(data.to_numpy(),2,0)
+        adj = np.squeeze(pec(z,orthogonalize=self._orth,log=self._log,absolute=self._absolute))
+        np.fill_diagonal(adj,np.nan)
+        return adj
