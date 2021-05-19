@@ -6,14 +6,13 @@ Python-based network analysis for time series.
 
 ## Getting started
 
-When it's ready you'll be able to download it via pip
+When it's ready you'll be able to download it via `pip`
 > pip install pynats
 
 ## Issues
 
-- You need llvmlite, which requires LLVM 10.0.x or 9.0.x and should be fine for most systems however in arch-linux this needs to be installed via the AUR (python-llvmlite) or by installing llvm10 using pacman (which will overwrite the latest version)
-- Same for PyTorch (install with python-pytorch). If you cannot, then torch might be able to be installed via pip, however I would use the --no-cache-dir flag otherwise there's a MemoryError raised.
-- You need cairo install (for pycairo -- sorry, this one's a pain.)
+- You need `llvmlite`, which requires `LLVM 10.0.x` or `LLVM 9.0.x` and should be fine for most systems however in `arch` this needs to be installed via the AUR (`python-llvmlite`) or by installing `llvm10` using `pacman` (which will overwrite the latest version)
+- Same for `PyTorch` (install with `python-pytorch`). If you cannot, then torch might be able to be installed via `pip`, however I would use the `--no-cache-dir` flag otherwise there's a `MemoryError` raised.
 
 # List of functions
 
@@ -68,6 +67,7 @@ Measures that assume the temporal precendence in time series to be important in 
 ### Spectral measures
 
 Measures that involve a Fourier or wavelet transformation prior to computing statistics.
+Each statistic is averaged over some frequency (and time, for wavelet transformations) range specified by the parameters (see below).
 
 | Function | Description |
 | -------- | ----------- |
@@ -114,7 +114,7 @@ The shorthand for each parameter (LHS of the table) is appended to the function 
 | Parameter | Description |
 | -------- | ----------- |
 | `sq` | Square the output |
-| `mean` | Take the mean of the output sequence (for functions that output sequences, e.g., `xcorr` and `ccm`) |
+| `mean` | Take the mean of the output sequence (for functions such as `xcorr` and `ccm`) |
 | `max` | Take the max of the output sequence |
 | `diff` | Take the mean of the difference between two output sequences |
 | `empirical` | Maximum likelihood estimator for covariance matrix (non rank-based correlation coefficients only) |
@@ -129,12 +129,13 @@ The shorthand for each parameter (LHS of the table) is appended to the function 
 | `kraskov_NN-X` | Kraskov-Strogaz-Grassberger estimator for mutual information-based measures with nearest-neighbours `X` (default: `4`) |
 | `gaussian` | Gaussian estimator for information-theoretic measures |
 | `kozachenko` | Kozachenko estimator for entropy-based measures |
-| `k-X` | history length of target process for transfer entropy/Granger causality (default: `1`) |
-| `kt-X` | time delay of target process for transfer entropy/Granger causality (default: `1`) |
-| `l-X` | history length of source process for transfer entropy/Granger causality (default: `1`) |
-| `lt-X` | time delay of source process for transfer entropy/Granger causality (default: `1`) |
-| `DCE` | Dynamic correlation exclusion (a.k.a Theiler Window) for information-theoretic measures (not yet suitable for gaussian estimator) |
+| `k-X` | History length of target process for transfer entropy/Granger causality (default: `1`) |
+| `kt-X` | Time delay of target process for transfer entropy/Granger causality (default: `1`) |
+| `l-X` | History length of source process for transfer entropy/Granger causality (default: `1`) |
+| `lt-X` | Time delay of source process for transfer entropy/Granger causality (default: `1`) |
+| `DCE` | Dynamic correlation exclusion (a.k.a Theiler Window) for information-theoretic measures (not yet suitable for Gaussian estimator) |
 | `fs-X` | Sampling frequency of `X` (default: `1`) |
 | `fmin-X` | Minimum frequency for averaging spectral/wavelet measures (default: `0`) |
 | `fmax-X` | Maximum frequency for averaging  spectral/wavelet measures (default: `nyquist = fs/2`) |
+| `order-X` | AR Order for parametric spectral Granger causality, choose `None` for optimisation by BIC (default: `None`) |
 | `cwt` | Continuous wavelet transformation (for spectral measures) |
