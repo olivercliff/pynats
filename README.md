@@ -16,9 +16,9 @@ When it's ready you'll be able to download it via `pip`
 
 # List of functions
 
-### (Signed) correlation coefficients
+### Correlation coefficients
 
-Association coefficients that assume the observations are paired but not necessarily values of a time series.
+Association coefficients that assume the observations are paired but not necessarily values of a time series. As coefficients these statistics are signed in their raw form.
 
 | Function | Description |
 | ----------- | ----------- |
@@ -29,9 +29,9 @@ Association coefficients that assume the observations are paired but not necessa
 | `prec` | Precision (inverse of partial correlation) |
 | `xcorr` | Cross correlation (with output statistic dependent on parameters, see below) |
 
-### (Unsigned) independence criterion
+### Independence criterion
 
-Non-parametric independence criterion, typically based off distances between observations.
+Measures that assume a certain model of paired observations (not necessarily time series) to be important in distinguishing independence or integration.
 
 | Function | Description |
 | ----------- | ----------- |
@@ -39,21 +39,15 @@ Non-parametric independence criterion, typically based off distances between obs
 | `hhg` | Heller-Heller-Gorfine independence criterion |
 | `dcorr` | Distance correlation |
 | `mgc` | Multi-scale graph correlation |
-
-### Model-based independence measures
-
-Measures that assume a certain model of paired observations (not necessarily time series) to be important in distinguishing independence or integration.
-
-| Function | Description |
-| ----------- | ----------- |
 | `anm` | Additive noise model |
 | `gpfit` | Gaussian process bivariate fit |
 | `cds` | Conditional distribution similarity fit |
 | `igci` | Information-geometric conditional independence |
 | `reci` | Neural correlation coefficient |
-### Time-based measures
 
-Measures that assume the temporal precendence in time series to be important in distinguishing independence or integration.
+### Discrete-time measures
+
+Measures that assume the temporal precendence in discrete-time time series are important in distinguishing independence or integration.
 
 | Function | Description |
 | -------- | ----------- |
