@@ -134,6 +134,17 @@
     - fmin: 0.25
       fmax: 0.5
 
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
+
   coherence_phase:
     - fs: 1
 
@@ -142,6 +153,17 @@
 
     - fmin: 0.25
       fmax: 0.5
+
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
 
   coherence_magnitude:
     - fs: 1
@@ -152,6 +174,17 @@
     - fmin: 0.25
       fmax: 0.5
 
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
+
   # Coherence (ordinal or squared? imaginary components of the coherence)
   icoherence:
     - fs: 1
@@ -161,6 +194,17 @@
 
     - fmin: 0.25
       fmax: 0.5
+
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
 
   phase_slope_index:
     - fs: 1
@@ -180,6 +224,17 @@
     - fmin: 0.25
       fmax: 0.5
 
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
+
   phase_lag_index:
     - fs: 1
 
@@ -188,6 +243,17 @@
 
     - fmin: 0.25
       fmax: 0.5
+
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
 
   weighted_phase_lag_index:
     - fs: 1
@@ -198,6 +264,17 @@
     - fmin: 0.25
       fmax: 0.5
 
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
+
   debiased_squared_phase_lag_index:
     - fs: 1
 
@@ -206,6 +283,17 @@
 
     - fmin: 0.25
       fmax: 0.5
+
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
 
   debiased_squared_weighted_phase_lag_index:
     - fs: 1
@@ -216,6 +304,17 @@
     - fmin: 0.25
       fmax: 0.5
 
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
+
   pairwise_phase_consistency:
     - fs: 1
 
@@ -224,6 +323,17 @@
 
     - fmin: 0.25
       fmax: 0.5
+
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
 
   directed_transfer_function:
     - fs: 1
@@ -234,6 +344,17 @@
     - fmin: 0.25
       fmax: 0.5
 
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
+
   directed_coherence:
     - fs: 1
 
@@ -242,6 +363,17 @@
 
     - fmin: 0.25
       fmax: 0.5
+
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
 
   partial_directed_coherence:
     - fs: 1
@@ -252,6 +384,17 @@
     - fmin: 0.25
       fmax: 0.5
 
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
+
   generalized_partial_directed_coherence:
     - fs: 1
 
@@ -261,6 +404,17 @@
     - fmin: 0.25
       fmax: 0.5
 
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
+
   direct_directed_transfer_function:
     - fs: 1
 
@@ -269,6 +423,17 @@
 
     - fmin: 0.25
       fmax: 0.5
+
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
 
   group_delay:
     - fs: 1
@@ -310,6 +475,17 @@
       fmax: 0.5
       order: 20
 
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
+
   # Power envelope correlation
   envelope_correlation:
     - orth: False
@@ -349,6 +525,17 @@
     - fmin: 0.25
       fmax: 0.5
 
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
+
   # Coherence (ordinal or squared? imaginary components of the coherence)
   icoherence:
     - fs: 1
@@ -359,6 +546,17 @@
     - fmin: 0.25
       fmax: 0.5
 
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
+
   phase_locking_value:
     - fs: 1
 
@@ -367,6 +565,17 @@
 
     - fmin: 0.25
       fmax: 0.5
+
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
 
   pairwise_phase_consistency:
     - fs: 1
@@ -377,6 +586,17 @@
     - fmin: 0.25
       fmax: 0.5
 
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
+
   phase_lag_index:
     - fs: 1
 
@@ -385,6 +605,17 @@
 
     - fmin: 0.25
       fmax: 0.5
+
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
 
   debiased_squared_phase_lag_index:
     - fs: 1
@@ -395,6 +626,17 @@
     - fmin: 0.25
       fmax: 0.5
 
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
+
   weighted_phase_lag_index:
     - fs: 1
 
@@ -403,6 +645,17 @@
 
     - fmin: 0.25
       fmax: 0.5
+
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
 
   debiased_weighted_squared_phase_lag_index:
     - fs: 1
@@ -413,6 +666,17 @@
     - fmin: 0.25
       fmax: 0.5
 
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
+
   phase_slope_index:
     - fs: 1
 
@@ -421,6 +685,17 @@
 
     - fmin: 0.25
       fmax: 0.5
+
+    - fs: 1
+      statistic: max
+
+    - fmin: 0
+      fmax: 0.25
+      statistic: max
+
+    - fmin: 0.25
+      fmax: 0.5
+      statistic: max
 
 # Information-theoretic measures
 .infotheory:
@@ -552,3 +827,29 @@
     - estimator: gaussian
       k_history: 1
       l_history: 1
+
+  integrated_information:
+    - phitype: 'star'
+
+    - phitype: 'star'
+      normalization: 1
+
+    - phitype: 'SI'
+
+    - phitype: 'SI'
+      normalization: 1
+
+    - phitype: 'Geo'
+
+    - phitype: 'Geo'
+      normalization: 1
+
+    - phitype: 'MI'
+
+    - phitype: 'MI'
+      normalization: 1
+  
+    - phitype: 'MI1'
+
+    - phitype: 'MI1'
+      normalization: 1

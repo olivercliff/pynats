@@ -5,34 +5,26 @@ from pynats.calculator import Calculator
 from pynats.data import Data
 import matplotlib.pyplot as plt
 
-# Generate three random sequences (not time series yet)
-M, T = 3, 100
+import seaborn as sns
 
-procs = np.random.normal(size=(M,T))
-
-def make_ar(x):
-    for i in range(1,len(x)):
-        x[i] += 0.5 * x[i-1]
-
-make_ar(procs[0])
-for i in range(1,M):
-    make_ar(procs[i]) # Add autoregression
-    procs[i][1:] += 0.25 * procs[i-1][:-1] # Add dependence on previous process
-
-# Load the Data class
-
-# Create an unnamed dataset with 3 processes and 1000 observations (1 replication)
-#   - dim_order specifies processes is the first dimension and samples/observations are the second
-#   - normalise z-scores the data
-data = Data(procs, dim_order='ps', normalise=True)
-
-# natplt.plot_spacetime(data)
-
-# Let's create an unnamed calculator
+data = Data.load_dataset('forex')
 calc = Calculator(dataset=data)
 
 calc.compute()
 
-# natplt.clustermap(calc)
+calc.prune()
+
+# Correlate all the features
+corrmat = calc.flatten().corr(method='spearman')
+
+# corrmat.dropna(axis=0,thres=0.2*corrmat.shape[0]).dropna(axis=1,thres=0.2*corrmat.shape[0])
+
+sns.set(font_scale=0.8)
+g = sns.clustermap(corrmat.fillna(0), mask=corrmat.isna(),
+                    center=0.0,
+                    cmap='RdYlBu_r',
+                    xticklabels=1, yticklabels=1 )
+
+plt.setp(g.ax_heatmap.xaxis.get_majorticklabels(), rotation=45, ha='right')
 
 plt.show()

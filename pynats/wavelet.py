@@ -7,16 +7,22 @@ class mne(unsigned):
 
     _measure_list = []
 
-    def __init__(self,fs=1,fmin=0,fmax=None):
+    def __init__(self,fs=1,fmin=0,fmax=None,statistic='mean'):
         if fmax is None:
             fmax = fs/2
 
         self._fs = fs
         if fs != 1:
-            warnings.warning('Multiple sampling frequencies not yet handled.')
+            warnings.warn('Multiple sampling frequencies not yet handled.')
         self._fmin = fmin
         self._fmax = fmax
-        paramstr = f'_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}'.replace('.','-')
+        if statistic == 'mean':
+            self._statfn = np.nanmean
+        elif statistic == 'max':
+            self._statfn = np.nanmax
+        else:
+            raise NameError(f'Unknown statistic {statistic}')
+        paramstr = f'_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}'.replace('.','-')
         self.name = self.name + paramstr
 
         # Probably not good practice
@@ -25,6 +31,13 @@ class mne(unsigned):
                 mne._measure_list.append(self._measure)
         except AttributeError:
             pass
+
+    @property
+    def measure(self):
+        try:
+            return self._measure
+        except AttributeError:
+            raise AttributeError(f'Include measure for {self.humanname}')
 
     def _get_measure(self,C):
         raise NotImplementedError
@@ -36,11 +49,14 @@ class mne(unsigned):
         except AttributeError:
             z = np.moveaxis(data.to_numpy(),2,0)
 
-            freqs = np.linspace(0.2, 0.5, 10)
+            cwt_freqs = np.linspace(0.2, 0.5, 100)
+            cwt_n_cycles = cwt_freqs / 7.
             conn, freq, _, _, _ = mnec.spectral_connectivity(
                     data=z, method=mne._measure_list, mode='cwt_morlet',
-                    sfreq=self._fs, mt_adaptive=True, cwt_freqs=freqs,
-                    verbose='WARNING')
+                    sfreq=self._fs, mt_adaptive=True,
+                    fmin=5/data.n_observations,fmax=0.5,
+                    cwt_freqs=cwt_freqs,
+                    cwt_n_cycles=cwt_n_cycles, verbose='WARNING')
             data.mne = dict(conn=conn,freq=freq)
 
         # freq = conn.frequencies
@@ -52,7 +68,7 @@ class mne(unsigned):
     @parse_multivariate
     def adjacency(self, data):
         adj_freq, freq_id = self._get_cache(data)
-        adj = np.nanmean(np.real(adj_freq[...,freq_id]), axis=(2,3))
+        adj = self._statfn(np.real(adj_freq[...,freq_id]), axis=(2,3))
         np.fill_diagonal(adj,np.nan)
         return adj
 
@@ -159,6 +175,6 @@ class phase_slope_index(mne,directed):
     @parse_multivariate
     def adjacency(self, data):
         adj_freq, freq_id = self._get_cache(data)
-        adj = np.nanmean(np.real(adj_freq[...,freq_id]), axis=(2,3))
+        adj = self._statfn(np.real(adj_freq[...,freq_id]), axis=(2,3))
         np.fill_diagonal(adj,np.nan)
         return adj

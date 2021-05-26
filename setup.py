@@ -47,5 +47,6 @@ setup(
                         'spectral-connectivity>=0.2.4.dev0',
                         'umap-learn>=0.4.6',
                         'torch>=1.7.0',
-                        'cdt==0.5.23']
+                        'cdt==0.5.23',
+                        'oct2py==5.2.0']
 )

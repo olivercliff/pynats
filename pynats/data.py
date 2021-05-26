@@ -167,7 +167,7 @@ class Data():
 
         return npdat
 
-    def set_data(self, data, dim_order='ps', name=None, n_processes=None, n_observations=None, verbose=False):
+    def set_data(self, data, dim_order='ps', name=None, n_processes=None, n_observations=None, verbose=True):
         """Overwrite data in an existing Data object.
 
         Args:
@@ -236,6 +236,19 @@ class Data():
                     f' time-series data with size {self.data.n_processes}')
         
         self._reset_data_size()
+
+    @staticmethod
+    def load_dataset(name):
+        basedir = os.path.join(os.path.dirname(__file__),'data')
+        if name == 'forex':
+            filename = 'forex.npy'
+            dim_order = 'sp'
+        elif name == 'cml':
+            filename = 'cml.npy'
+            dim_order = 'sp'
+        else:
+            raise NameError(f'Unknown dataset: {name}.')
+        return Data(data=os.path.join(basedir,filename),dim_order=dim_order)
 
     def _reorder_data(self, data, dim_order):
         """Reorder data dimensions to processes x observations x realisations."""

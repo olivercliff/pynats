@@ -3,6 +3,8 @@ import numpy as np
 from pynats import utils
 from pynats.base import directed, undirected, parse_univariate, parse_bivariate, unsigned
 
+from oct2py import octave, Struct
+
 import copy
 import os
 import warnings
@@ -442,18 +444,44 @@ class stochastic_interaction(jidt_base,undirected):
     name = 'si'
     labels = ['unsigned','infotheory','temporal','undirected']
 
-    def __init__(self,history=10,**kwargs):
+    def __init__(self,delay=1,**kwargs):
         super(stochastic_interaction,self).__init__(**kwargs)
-        self._history = history
+        self._delay = delay
 
     @parse_bivariate
     def bivariate(self,data,i=None,j=None,verbose=False):
         x,y = data.to_numpy()[[i,j]]
         xy = np.concatenate([x,y],axis=1)
-        k = self._history
+        tau = self._delay
 
-        H_joint = self._compute_conditional_entropy(xy[k:],xy[:-k])
-        H_src = self._compute_conditional_entropy(x[k:],x[:-k])
-        H_targ = self._compute_conditional_entropy(y[k:],y[:-k])
+        H_joint = self._compute_conditional_entropy(xy[tau:],xy[:-tau])
+        H_src = self._compute_conditional_entropy(x[tau:],x[:-tau])
+        H_targ = self._compute_conditional_entropy(y[tau:],y[:-tau])
 
         return H_src + H_targ - H_joint
+
+class integrated_information(undirected):
+    
+    humanname = "Integrated information"
+    name = "phi"
+    labels = ['unsigned','infotheory','temporal','undirected']
+
+    def __init__(self,phitype='star',delay=1,normalization=0):
+        path = os.path.dirname(os.path.abspath(__file__)) + '/lib/PhiToolbox/'
+        octave.addpath(octave.genpath(path))
+
+        self._params = Struct()
+        self._params['tau'] = 1
+        self._options = Struct()
+        self._options['type_of_phi'] = phitype
+        self._options['type_of_dist'] = 'Gauss'
+        self._options['normalization'] = normalization
+
+        self.name += f'_{phitype}_t-{delay}_norm-{normalization}'
+    
+    @parse_bivariate
+    def bivariate(self,data,i=None,j=None,verbose=False):        
+        P = [1, 2]
+        Z = data.to_numpy(squeeze=True)[[i,j]]
+        
+        return octave.phi_comp(Z, P, self._params, self._options)
