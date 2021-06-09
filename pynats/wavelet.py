@@ -6,9 +6,7 @@ from functools import partial
 
 class mne(unsigned):
 
-    _measure_list = []
-
-    def __init__(self,fs=1,fmin=0,fmax=None,mode='wavelet',statistic='mean'):
+    def __init__(self,fs=1,fmin=0,fmax=None,statistic='mean'):
         if fmax is None:
             fmax = fs/2
 
@@ -25,17 +23,9 @@ class mne(unsigned):
             raise NameError(f'Unknown statistic {statistic}')
         
         self._statistic = statistic
-        self._mode = mode
 
-        paramstr = f'_{mode}_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}'.replace('.','-')
+        paramstr = f'_wavelet_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}'.replace('.','-')
         self.name += paramstr
-
-        # Probably not good practice
-        try:
-            if self._measure not in mne._measure_list:
-                mne._measure_list.append(self._measure)
-        except AttributeError:
-            pass
 
     @property
     def measure(self):
@@ -49,30 +39,27 @@ class mne(unsigned):
 
     def _get_cache(self,data):
         try:
-            conn = data.mne['conn']
-            freq = data.mne['freq']
-        except AttributeError:
+            conn, freq = data.mne[self.measure]
+        except (KeyError,AttributeError):
             z = np.moveaxis(data.to_numpy(),2,0)
 
-            if self._mode == 'wavelet':
-                cwt_freqs = np.linspace(0.2, 0.5, 125)
-                cwt_n_cycles = cwt_freqs / 7.
-                connlist, freq, _, _, _ = mnec.spectral_connectivity(
-                        data=z, method=mne._measure_list, mode='cwt_morlet',
-                        sfreq=self._fs, mt_adaptive=True,
-                        fmin=5/data.n_observations,fmax=self._fs/2,
-                        cwt_freqs=cwt_freqs,
-                        cwt_n_cycles=cwt_n_cycles, verbose='WARNING')
+            cwt_freqs = np.linspace(0.2, 0.5, 125)
+            cwt_n_cycles = cwt_freqs / 7.
+            conn, freq, _, _, _ = mnec.spectral_connectivity(
+                    data=z, method=self.measure, mode='cwt_morlet',
+                    sfreq=self._fs, mt_adaptive=True,
+                    fmin=5/data.n_observations,fmax=self._fs/2,
+                    cwt_freqs=cwt_freqs,
+                    cwt_n_cycles=cwt_n_cycles, verbose='WARNING')
                 
-                conn = dict(zip(mne._measure_list,connlist))
+            try:
+                data.mne[self.measure] = (conn,freq)
+            except AttributeError:
+                data.mne = {self.measure: (conn,freq)}
 
-            data.mne = dict(conn=conn,freq=freq)
-
-        # freq = conn.frequencies
-        myconn = conn[self.measure]
         freq_id = np.where((freq >= self._fmin) * (freq <= self._fmax))[0]
 
-        return myconn, freq_id
+        return conn, freq_id
 
     @parse_multivariate
     def adjacency(self, data):

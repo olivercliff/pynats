@@ -44,6 +44,7 @@ class jidt_base(unsigned):
         self._kernel_width = kernel_width
         self._prop_k = prop_k
         self._dyn_corr_excl = dyn_corr_excl
+        self._entropy_calc = self._getcalc('entropy')
 
         self.name = self.name + '_' + estimator
         if estimator == 'kraskov':
@@ -64,8 +65,6 @@ class jidt_base(unsigned):
 
         if self._dyn_corr_excl:
             self.name = self.name + '_DCE'
-
-        self._entropy_calc = self._getcalc('entropy')
 
     def __getstate__(self):
         state = dict(self.__dict__)
@@ -363,7 +362,7 @@ class transfer_entropy(jidt_base,directed):
             self._calc.setObservations(jp.JArray(jp.JDouble,1)(src), jp.JArray(jp.JDouble,1)(targ))
             return self._calc.computeAverageLocalOfObservations()
         except Exception as err:
-            warnings.warn(f'TE calcs failed: {err}. Trying checking input time series for Cholesky decomposition.')
+            warnings.warn(f'TE calcs failed: {err}.')
             return np.NaN
 
 class crossmap_entropy(jidt_base,directed):
@@ -488,10 +487,6 @@ class integrated_information(undirected):
     labels = ['unsigned','infotheory','temporal','undirected']
 
     def __init__(self,phitype='star',delay=1,normalization=0):
-
-        path = os.path.dirname(os.path.abspath(__file__)) + '/lib/PhiToolbox/'
-        octave.addpath(octave.genpath(path))
-
         self._params = Struct()
         self._params['tau'] = 1
         self._options = Struct()
@@ -502,7 +497,11 @@ class integrated_information(undirected):
         self.name += f'_{phitype}_t-{delay}_norm-{normalization}'
     
     @parse_bivariate
-    def bivariate(self,data,i=None,j=None,verbose=False):        
+    def bivariate(self,data,i=None,j=None,verbose=False):
+        if not octave.exist('phi_comp'):
+            path = os.path.dirname(os.path.abspath(__file__)) + '/lib/PhiToolbox/'
+            octave.addpath(octave.genpath(path))
+
         P = [1, 2]
         Z = data.to_numpy(squeeze=True)[[i,j]]
         
