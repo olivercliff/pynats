@@ -12,7 +12,7 @@ setup(
     #scripts=['bin/script1','bin/script2'],
     package_data={'': ['config.yaml','lib/jidt/infodynamics.jar']},
     include_package_data=True,
-    version='0.1.2.9',
+    version='0.1.5',
     description='Network analysis for time series',
     author='Oliver M. Cliff',
     author_email='oliver.m.cliff@gmail.com',
@@ -32,14 +32,14 @@ setup(
         "Topic :: Scientific/Engineering :: Medical Science Apps.",
     ],
     install_requires=['pytest',
-                        'scipy>=1.6.3'
+                        'scipy>=1.6.3',
                         'numpy==1.20.1', 
                         'statsmodels>=0.12.0',
                         'pyyaml>=5.3.1',
                         'tqdm>=4.50.2',
                         'nilearn>=0.6.2',
                         'nitime==0.9',
-                        'hyppo>=0.1.3',
+                        'hyppo>=0.2.1',
                         'pyEDM>=1.0.3.2',
                         'jpype1>=1.2.0',
                         'sktime==0.4.3',
@@ -48,5 +48,8 @@ setup(
                         'umap-learn>=0.4.6',
                         'torch>=1.7.0',
                         'cdt==0.5.23',
-                        'oct2py==5.2.0']
+                        'oct2py==5.2.0',
+                        'dtw-python==1.1.10',
+                        'tslearn==0.5.1',
+                        'mne==0.23.0']
 )

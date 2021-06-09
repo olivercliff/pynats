@@ -12,15 +12,14 @@ calc = Calculator(dataset=data)
 
 calc.compute()
 
-calc.prune()
+# calc.prune()
 
 # Correlate all the features
-corrmat = calc.flatten().corr(method='spearman')
+corrmat = calc.flatten().corr(method='spearman').dropna(axis=0,how='all').dropna(axis=1,how='all')
 
-# corrmat.dropna(axis=0,thres=0.2*corrmat.shape[0]).dropna(axis=1,thres=0.2*corrmat.shape[0])
+sns.set(font_scale=0.6)
 
-sns.set(font_scale=0.8)
-g = sns.clustermap(corrmat.fillna(0), mask=corrmat.isna(),
+g = sns.clustermap( corrmat.fillna(0), mask=corrmat.isna(),
                     center=0.0,
                     cmap='RdYlBu_r',
                     xticklabels=1, yticklabels=1 )

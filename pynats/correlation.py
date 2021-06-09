@@ -93,10 +93,11 @@ class xcorr(undirected,signed):
     humanname = "Cross correlation"
     labels = ['correlation','unordered','lagged','linear','undirected']
 
-    def __init__(self,squared=False,statistic='max'):
+    def __init__(self,squared=False,statistic='max',sigonly=True):
         self.name = 'xcorr'
         self._squared = squared
         self._statistic = statistic
+        self._sigonly = sigonly
 
         if self._squared:
             self.issigned = lambda : False
@@ -104,29 +105,45 @@ class xcorr(undirected,signed):
             self.labels += ['unsigned']
         else:
             self.labels += ['signed']
-        self.name = self.name + '_' + statistic
+        self.name += f'_{statistic}_sig-{sigonly}'
     
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):
 
-        if not hasattr(data,'xcorr'):
-            data.xcorr = np.ones((data.n_processes,data.n_processes,data.n_observations*2-1)) * -np.inf
-
-        if data.xcorr[i,j,0] == -np.inf:
+        T = data.n_observations
+        try: 
+            r_ij = data.xcorr[(i,j)]
+        except (KeyError,AttributeError):
             x, y = data.to_numpy()[[i,j]]
-            data.xcorr[i,j] = np.squeeze(signal.correlate(x,y,'full'))
-            data.xcorr[i,j] = data.xcorr[i,j] / x.std() / y.std() / (data.n_observations - 1)
+
+            r_ij = np.squeeze(signal.correlate(x,y,'full'))
+            r_ij = r_ij / x.std() / y.std() / (T-1)
+
+            # Truncate to T/4
+            r_ij = r_ij[T-T//4:T+T//4]
+
+            try:
+                data.xcorr[(i,j)] = r_ij
+            except AttributeError:
+                data.xcorr = {(i,j): r_ij}
+
+        # Truncate at first statistically significant zero (i.e., |r| <= 1.96/sqrt(T))
+        if self._sigonly:
+            N = len(r_ij)//2
+            fzf = np.where(np.abs(r_ij[len(r_ij)//2:]) <= 1.96/np.sqrt(N))[0][0]
+            fzr = np.where(np.abs(r_ij[:len(r_ij)//2]) <= 1.96/np.sqrt(N))[0][-1]
+            r_ij = r_ij[N-fzr:N+fzf]
 
         if self._statistic == 'max':
             if self._squared:
-                return np.max(data.xcorr[i,j]**2)
+                return np.max(r_ij**2)
             else:
-                return np.max(data.xcorr[i,j])
+                return np.max(r_ij)
         elif self._statistic == 'mean':
             if self._squared:
-                return np.mean(data.xcorr[i,j]**2)
+                return np.mean(r_ij**2)
             else:
-                return np.mean(data.xcorr[i,j])
+                return np.mean(r_ij)
         else:
             raise TypeError(f'Unknown statistic: {self._statistic}') 
 
@@ -186,10 +203,15 @@ class hsic(undirected,unsigned):
     name = 'hsic'
     labels = ['independence','unordered','nonlinear','undirected']
 
+    def __init__(self,biased=False):
+        self._biased = biased
+        if biased:
+            self.name += '_biased'
+
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):
         x, y = data.to_numpy()[[i,j]]
-        stat, _ = Hsic().test(x, y, auto=True )
+        stat = Hsic(bias=self._biased).statistic(x,y)
         return stat
 
 class hhg(directed,unsigned):
@@ -205,16 +227,21 @@ class hhg(directed,unsigned):
         x, y = data.to_numpy()[[i,j]]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            stat, _ = HHG().test(x, y, reps=0)
+            stat = HHG().statistic(x,y)
         return stat
 
 class dcorr(undirected,unsigned):
-    """ Correlation of distances
+    """ Distance correlation
     """
 
     humanname = "Distance correlation"
     name = 'dcorr'
     labels = ['independence','unordered','nonlinear','undirected']
+
+    def __init__(self,biased=False):
+        self._biased = biased
+        if biased:
+            self.name += '_biased'
     
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):
@@ -223,14 +250,14 @@ class dcorr(undirected,unsigned):
         x, y = data.to_numpy()[[i,j]]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            stat, _ = Dcorr().test(x, y, auto=True, reps=0)
+            stat = Dcorr(bias=self._biased).statistic(x,y)
         return stat
 
 class mgc(undirected,unsigned):
-    """ Multi-graph correlation
+    """ Multiscale graph correlation
     """
 
-    humanname = "Multi-scale graph correlation"
+    humanname = "Multiscale graph correlation"
     name = "mgc"
     labels = ['independence','unordered','nonlinear','undirected']
 
@@ -239,5 +266,5 @@ class mgc(undirected,unsigned):
         x, y = data.to_numpy()[[i,j]]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            stat, _, _ = MGC().test(x, y, reps=0 )
+            stat = MGC().statistic(x,y)
         return stat

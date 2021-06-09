@@ -4,7 +4,6 @@ from pynats import utils
 from pynats.base import directed, undirected, parse_univariate, parse_bivariate, unsigned
 
 from oct2py import octave, Struct
-
 import copy
 import os
 import warnings
@@ -53,6 +52,12 @@ class jidt_base(unsigned):
         elif estimator == 'kernel':
             self.name = self.name + '_W-{}'.format(kernel_width)
             self.labels = self.labels + ['nonlinear']
+        elif estimator == 'symbolic':
+            if not isinstance(self,transfer_entropy):
+                raise NotImplementedError('Symbolic estimator is only available for transfer entropy.')
+            self.labels = self.labels + ['symbolic']
+            self._dyn_corr_excl = None
+            return
         else:
             self.labels = self.labels + ['linear']
             self._dyn_corr_excl = None
@@ -64,7 +69,10 @@ class jidt_base(unsigned):
 
     def __getstate__(self):
         state = dict(self.__dict__)
-        del state['_entropy_calc']
+        try:
+            del state['_entropy_calc']
+        except KeyError:
+            pass
         try:
             del state['_calc']
         except KeyError:
@@ -210,6 +218,32 @@ class jidt_base(unsigned):
             self._calc.setProperty(self._DYN_CORR_EXCL_PROP_NAME,
                                     str(int(self._dyn_corr_excl)))
 
+class joint_entropy(jidt_base,undirected):
+
+    humanname = 'Joint entropy'
+    name = 'je'
+    labels = ['unsigned','infotheory','unordered','undirected']
+
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+
+    @parse_bivariate
+    def bivariate(self,data,i=None,j=None):
+        return self._compute_joint_entropy(data,i=i,j=j)
+
+class conditional_entropy(jidt_base,directed):
+
+    humanname = 'Conditional entropy'
+    name = 'ce'
+    labels = ['unsigned','infotheory','unordered','directed']
+
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+
+    @parse_bivariate
+    def bivariate(self,data,i=None,j=None):
+        return self._compute_joint_entropy(data,i=i,j=j) - self._compute_entropy(data,i=i)
+        
 class mutual_info(jidt_base,undirected):
     humanname = "Mutual information"
     name = 'mi'
@@ -220,7 +254,7 @@ class mutual_info(jidt_base,undirected):
         self._calc = self._getcalc('mutual_info')
 
     def __setstate__(self,state):
-        super(mutual_info,self).__setstate__(state)
+        super().__setstate__(state)
         self.__dict__.update(state)
         self._calc = self._getcalc('mutual_info')
 
@@ -241,7 +275,7 @@ class mutual_info(jidt_base,undirected):
 
 class time_lagged_mutual_info(mutual_info):
     humanname = "Time-lagged mutual information"
-    name = 'tl_mi'
+    name = 'tlmi'
     labels = ['unsigned','infotheory','temporal','lagged','undirected']
 
     def __init__(self,**kwargs):
@@ -251,7 +285,7 @@ class time_lagged_mutual_info(mutual_info):
     def __setstate__(self,state):
         """ Re-initialise the calculator
         """
-        super(time_lagged_mutual_info,self).__setstate__(state)
+        super().__setstate__(state)
         self.__dict__.update(state)
         self._calc = self._getcalc('mutual_info')
 
@@ -313,7 +347,7 @@ class transfer_entropy(jidt_base,directed):
         """ Re-initialise the calculator
         """
         # Re-initialise
-        super(transfer_entropy,self).__setstate__(state)
+        super().__setstate__(state)
         self.__dict__.update(state)
         self._calc = self._getcalc('transfer_entropy')
 
@@ -332,19 +366,6 @@ class transfer_entropy(jidt_base,directed):
             warnings.warn(f'TE calcs failed: {err}. Trying checking input time series for Cholesky decomposition.')
             return np.NaN
 
-class conditional_entropy(jidt_base,directed):
-
-    humanname = 'Conditional entropy'
-    name = 'ce'
-    labels = ['unsigned','infotheory','unordered','directed']
-
-    def __init__(self,**kwargs):
-        super(conditional_entropy,self).__init__(**kwargs)
-
-    @parse_bivariate
-    def bivariate(self,data,i=None,j=None):
-        return self._compute_joint_entropy(data,i=i,j=j) - self._compute_entropy(data,i=i)
-
 class crossmap_entropy(jidt_base,directed):
 
     humanname = 'Cross-map entropy'
@@ -352,7 +373,7 @@ class crossmap_entropy(jidt_base,directed):
     labels = ['unsigned','infotheory','temporal','directed']
 
     def __init__(self,history_length=10,**kwargs):
-        super(crossmap_entropy,self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._history_length = history_length
 
     @parse_bivariate
@@ -383,7 +404,7 @@ class causal_entropy(jidt_base,directed):
     labels = ['unsigned','infotheory','temporal','lagged','directed']
 
     def __init__(self,n=5,**kwargs):
-        super(causal_entropy,self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._n = n
 
     def _compute_causal_entropy(self,src,targ):
@@ -425,7 +446,7 @@ class directed_info(causal_entropy,directed):
     labels = ['unsigned','infotheory','temporal','lagged','directed']
 
     def __init__(self,n=10,**kwargs):
-        super(directed_info,self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._n = n
 
     @parse_bivariate
@@ -445,7 +466,7 @@ class stochastic_interaction(jidt_base,undirected):
     labels = ['unsigned','infotheory','temporal','undirected']
 
     def __init__(self,delay=1,**kwargs):
-        super(stochastic_interaction,self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._delay = delay
 
     @parse_bivariate
@@ -467,6 +488,7 @@ class integrated_information(undirected):
     labels = ['unsigned','infotheory','temporal','undirected']
 
     def __init__(self,phitype='star',delay=1,normalization=0):
+
         path = os.path.dirname(os.path.abspath(__file__)) + '/lib/PhiToolbox/'
         octave.addpath(octave.genpath(path))
 

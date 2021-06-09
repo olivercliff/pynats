@@ -11,10 +11,10 @@ configfile1 = configfilebase+'/config1.yaml'
 
 def test_create_yaml():
     myconfig0 = {'.correlation': {'pearsonr': None},
-                '.spectral': {'coherency': None}}
+                '.spectral': {'coherence_magnitude': None}}
     myconfig1 = {'.correlation': {'pearsonr': None,
                                     'spearmanr': None},
-                    '.spectral': {'coherency': None}}
+                    '.spectral': {'coherence_magnitude': None}}
 
     print(f'Creating yaml file: {configfile0}')
     with open(configfile0,'w') as f:

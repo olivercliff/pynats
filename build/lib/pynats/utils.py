@@ -3,6 +3,7 @@ import pprint
 import numpy as np
 from scipy.stats import zscore
 import warnings
+import pandas as pd
 
 def _contains_nan(a, nan_policy='propagate'):
     policies = ['propagate', 'raise', 'omit']
@@ -98,3 +99,7 @@ def standardise(a, dimension=0, df=1):
         return a - a.mean(axis=dimension)
     else:
         return (a - a.mean(axis=dimension)) / a_sd
+
+def convert_mdf_to_ddf(df):
+    ddf = pd.pivot_table(df.stack(dropna=False).reset_index(),index='Dataset',columns=['Type','Source measure','Target measure'],dropna=False).T.droplevel(0).reorder_levels([1,2,0])
+    return ddf

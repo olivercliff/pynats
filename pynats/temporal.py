@@ -10,7 +10,8 @@ from pynats.base import directed, undirected, parse_bivariate, unsigned, signed
 
 import importlib
 import scipy.spatial.distance as distance
-from fastdtw import fastdtw
+import tslearn.metrics
+from tslearn.barycenters import euclidean_barycenter, dtw_barycenter_averaging, dtw_barycenter_averaging_subgradient, softdtw_barycenter
 
 class coint(undirected,unsigned):
     
@@ -18,7 +19,7 @@ class coint(undirected,unsigned):
     name = "coint"
     labels = ['unsigned','temporal','undirected','lagged']
 
-    def __init__(self,method='johansen',statistic='pvalue'):
+    def __init__(self,method='johansen',statistic='trace_stat'):
         self._method = method
         self._statistic = statistic
         self.name = self.name + '_' + method + '_' + statistic
@@ -122,7 +123,7 @@ class ccm(directed,unsigned):
 
         return stat
 
-class dcorrx(undirected,unsigned):
+class dcorrx(directed,unsigned):
     """ Multi-graph correlation for time series
     """
 
@@ -132,6 +133,7 @@ class dcorrx(undirected,unsigned):
 
     def __init__(self,max_lag=1):
         self._max_lag = max_lag
+        self.name += f'_maxlag-{max_lag}'
 
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):
@@ -140,10 +142,10 @@ class dcorrx(undirected,unsigned):
         y = z[j]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            stat, _, _ = DcorrX(max_lag=self._max_lag).test(x, y, reps=0 )
+            stat, _ = DcorrX(max_lag=self._max_lag).statistic(x,y)
         return stat
 
-class mgcx(undirected,unsigned):
+class mgcx(directed,unsigned):
     """ Multi-graph correlation for time series
     """
 
@@ -153,6 +155,7 @@ class mgcx(undirected,unsigned):
 
     def __init__(self,max_lag=1):
         self._max_lag = max_lag
+        self.name += f'_maxlag-{max_lag}'
 
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):
@@ -161,21 +164,124 @@ class mgcx(undirected,unsigned):
         y = z[j]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            stat, _, _ = MGCX(max_lag=self._max_lag).test(x, y, reps=0)
+            stat, _, _ = MGCX(max_lag=self._max_lag).statistic(x,y)
         return stat
 
-class dtw(undirected,unsigned):
+class time_warping(undirected, unsigned):
 
-    humanname = "Dynamic time warping"
-    name = "dtwx"
     labels = ['unsigned','distance','temporal','undirected','lagged']
 
-    def __init__(self,metric='euclidean'):
-        self.name = self.name + '_' + metric
-        self._dist = getattr(distance,metric)
+    def __init__(self,global_constraint='itakura'):
+        self.name += '_' + global_constraint
+        self._global_constraint = global_constraint
+
+    @property
+    def simfn(self):
+        try:
+            return self._simfn
+        except AttributeError:
+            raise NotImplementedError(f'Add the similarity function for {self.name}')
 
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):
         z = data.to_numpy(squeeze=True)
-        dist, _ = fastdtw(z[i],z[j],dist=self._dist)
-        return dist
+        return self._simfn(z[i],z[j],global_constraint=self._global_constraint)
+
+class dynamic_time_warping(time_warping):
+
+    humanname = 'Dynamic time warping'
+    name = 'dtw'
+
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+        self._simfn = tslearn.metrics.dtw
+
+class canonical_time_warping(time_warping):
+
+    humanname = 'Canonical time warping'
+    name = 'ctw'
+
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+        self._simfn = tslearn.metrics.ctw    
+
+class longest_common_subsequence(time_warping):
+
+    humanname = 'Longest common subsequence'
+    name = 'lcss'
+
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+        self._simfn = tslearn.metrics.lcss
+
+class soft_dynamic_time_warping(time_warping):
+
+    humanname = 'Dynamic time warping'
+    name = 'softdtw'
+
+    @parse_bivariate
+    def bivariate(self,data,i=None,j=None):
+        z = data.to_numpy(squeeze=True)
+        return tslearn.metrics.soft_dtw(z[i],z[j])
+
+class global_alignment_kernel(time_warping):
+
+    humanname = 'Global alignment kernel'
+    name = 'gak'
+
+    @parse_bivariate
+    def bivariate(self,data,i=None,j=None):
+        z = data.to_numpy(squeeze=True)
+        return tslearn.metrics.gak(z[i],z[j])
+
+class lb_keogh(unsigned,directed):
+    humanname = 'LB Keogh'
+    name = 'lbk'
+
+    @parse_bivariate
+    def bivariate(self,data,i=None,j=None):
+        z = data.to_numpy(squeeze=True)
+        return tslearn.metrics.lb_keogh(ts_query=z[j],ts_candidate=z[j])
+
+class barycenter(undirected,signed):
+
+    humanname = 'Barycenter'
+    name = 'bary'
+    labels = ['signed','undirected','unpaired']
+
+    def __init__(self,mode='euclidean',statistic='mean'):
+        if mode == 'euclidean':
+            self._fn = euclidean_barycenter
+        elif mode == 'dtw':
+            self._fn = dtw_barycenter_averaging
+        elif mode == 'sgddtw':
+            self._fn = dtw_barycenter_averaging_subgradient
+        elif mode == 'softdtw':
+            self._fn = softdtw_barycenter
+        else:
+            raise NameError(f'Unknown barycenter mode: {mode}')
+        self._mode = mode
+
+        if statistic == 'mean':
+            self._statfn = np.nanmean
+        elif statistic == 'max':
+            self._statfn = np.nanmax
+        else:
+            raise NameError(f'Unknown statistic: {statistic}')
+
+        self.name += f'_{mode}_{statistic}'
+
+    @parse_bivariate
+    def bivariate(self,data,i=None,j=None):
+
+        try:
+            barycenter = data.barycenter[self._mode]
+        except (AttributeError,KeyError):
+            z = data.to_numpy(squeeze=True)
+            barycenter = self._fn(z)
+            try:
+                data.barycenter[self._mode] = barycenter
+            except AttributeError:
+                data.barycenter = {self._mode: barycenter}
+        
+        return self._statfn(barycenter)

@@ -4,6 +4,8 @@ Python-based network analysis for time series.
 
 # Installation
 
+Requires Octave if using the integrated information measures.
+
 ## Getting started
 
 When it's ready you'll be able to download it via `pip`

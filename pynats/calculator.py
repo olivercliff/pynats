@@ -29,7 +29,7 @@ class Calculator():
         self._name = name
         self._labels = labels
 
-        print("Number of pairwise measures: {}".format(self._nmeasures))
+        print("Number of bivariate statistics: {}".format(self._nmeasures))
 
         if dataset is not None:
             self.load_dataset(dataset)
@@ -226,7 +226,7 @@ class Calculator():
             del self._measure_names[meas]
 
         self._nmeasures = len(self._measures)
-        print('Number of pairwise measures after pruning: {}'.format(self._nmeasures))
+        print('Number of statistics after pruning: {}'.format(self._nmeasures))
 
     def debias(self):
         """ Iterate through all measures and zero the unsigned measures (fixes absolute value errors when correlating)
@@ -265,6 +265,7 @@ class Calculator():
 
     # Merge two calculators (to include additional statistics)
     def merge(self,other):
+        raise NotImplementedError()
         if self.name is not other.name:
             raise TypeError(f'Calculator name does do not match. Aborting merge.')
         
@@ -300,7 +301,7 @@ class Calculator():
         edges[1::2] = [f'{j}->{i}' for i, j in zip(*il)]
 
         df = pd.DataFrame(flatmat, index=edges, columns=self._measure_names)
-        df.columns.name = 'Pairwise measure'
+        df.columns.name = 'Bivariate statistic'
         df.index.name = 'Edges'
         return df
 

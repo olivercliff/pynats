@@ -167,7 +167,7 @@ class Data():
 
         return npdat
 
-    def set_data(self, data, dim_order='ps', name=None, n_processes=None, n_observations=None, verbose=True):
+    def set_data(self,data,dim_order='ps',name=None,n_processes=None,n_observations=None,verbose=False):
         """Overwrite data in an existing Data object.
 
         Args:
@@ -210,10 +210,10 @@ class Data():
             self._name = name
 
         if verbose:
-            print(f'Added dataset "{name}" with properties: {self.n_processes} processes, {self.n_observations} observations, {self.n_replications} '
+            print(f'Dataset "{name}" now has properties: {self.n_processes} processes, {self.n_observations} observations, {self.n_replications} '
                     'replications')
 
-    def add_process(self, proc):
+    def add_process(self,proc,verbose=False):
         proc = np.squeeze(proc)
         if not isinstance(proc,np.ndarray) or proc.ndim != 1:
             raise TypeError('Process must be a 1D numpy array')
@@ -224,7 +224,7 @@ class Data():
             except IndexError:
                 raise IndexError()
         else:
-            self.set_data(proc, dim_order='s')
+            self.set_data(proc, dim_order='s',verbose=verbose)
         
         self._reset_data_size()
 

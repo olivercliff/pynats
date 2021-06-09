@@ -8,15 +8,9 @@ from mne.connectivity import envelope_correlation as pec
 import warnings
 
 """
-The measures here come from three different toolkits:
-
-    - Most measures come from Eden Kramer Lab's spectral_connectivity toolkit
-    - Spectral Granger causality comes from nitime (since Kramer's version doesn't optimise AR order, e.g., using BIC).
-
-    - [Outdated] Simple undirected measurements generally come from MNE (coherence, imaginary coherence, phase slope index)
-        - I originally used this b/c they had additional (short-time fourier and Mortlet) ways of computing the spectral measures, but Kramer has more measures. May be worth putting both in and ensuring they're identical.
-
-Granger causality could be computed from the VAR models in the infotheory module but this involves pretty intense integration with the temporal toolkits so may not ever get done.
+    - Most measures come from the Eden-Kramer Lab's spectral_connectivity toolkit
+    - parametric Spectral GC comes from nitime. [The VAR model could be computed from those in the infotheory module but this involves pretty intense integration so may not ever get done.]
+    - non-parametric Spectral GC still comes from EK lab
 """
 
 class kramer(unsigned):
@@ -34,11 +28,20 @@ class kramer(unsigned):
             self._statfn = np.nanmean
         elif statistic == 'max':
             self._statfn = np.nanmax
-        else:
+        elif statistic not in ['delay','slope','rvalue']:
             raise NameError(f'Unknown statistic: {statistic}')
+        else:
+            self._statfn = None
         self._statistic = statistic
-        paramstr = f'_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}'.replace('.','-')
-        self.name = self.name + paramstr
+        paramstr = f'_multitaper_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}'.replace('.','-')
+        self.name += paramstr
+
+    @property
+    def key(self):
+        if isinstance(self,group_delay) or isinstance(self,phase_slope_index):
+            return (self.measure,self._fmin,self._fmax)
+        else:
+            return (self.measure,)
 
     @property
     def measure(self):
@@ -54,7 +57,7 @@ class kramer_mv(kramer):
 
     def _get_cache(self,data):
         try:
-            res = data.kramer_mv[self.measure]
+            res = data.kramer_mv[self.key]
             freq = data.kramer_mv['freq']
         except (AttributeError,KeyError):
             z = np.transpose(data.to_numpy(squeeze=True))
@@ -67,7 +70,7 @@ class kramer_mv(kramer):
 
             freq = conn.frequencies
             try:
-                data.kramer_mv[self.measure] = res
+                data.kramer_mv[self.key] = res
             except AttributeError:
                 data.kramer_mv = {'freq': freq, self.measure: res}
 
@@ -79,11 +82,12 @@ class kramer_mv(kramer):
         freq_id = np.where((freq >= self._fmin) * (freq <= self._fmax))[0]
 
         try:
-            adj = self._statfn(np.real(adj_freq[0,freq_id,:,:]), axis=0)
-        except IndexError: # For phase-slope index
+            adj = self._statfn(adj_freq[0,freq_id,:,:], axis=0)
+        except IndexError: # For phase slope index
             adj = adj_freq[0]
         except TypeError: # For group delay
-            adj = adj_freq[1][0]
+            stat_id = [i for i, s in enumerate(['delay','slope','rvalue']) if self._statistic == s][0]
+            adj = adj_freq[stat_id][0]
         np.fill_diagonal(adj,np.nan)
         return adj
 
@@ -120,14 +124,14 @@ class kramer_bv(kramer):
 
         return self._statfn(bv_freq[0,freq_id,0,1])
 
-class coherency(kramer_mv,undirected):
-    humanname = 'Coherency'
+class coherence_magnitude(kramer_mv,undirected):
+    humanname = 'Coherence magnitude'
     labels = ['unsigned','spectral','undirected']
 
     def __init__(self,**kwargs):
-        self.name = 'coh'
+        self.name = 'cohmag'
         super().__init__(**kwargs)
-        self._measure = 'coherency'
+        self._measure = 'coherence_magnitude'
 
 class coherence_phase(kramer_mv,undirected):
     humanname = 'Coherence phase'
@@ -137,15 +141,6 @@ class coherence_phase(kramer_mv,undirected):
         self.name = 'phase'
         super().__init__(**kwargs)
         self._measure = 'coherence_phase'
-
-class coherence_magnitude(kramer_mv,undirected):
-    humanname = 'Coherence magnitude'
-    labels = ['unsigned','spectral','undirected']
-
-    def __init__(self,**kwargs):
-        self.name = 'cohmag'
-        super().__init__(**kwargs)
-        self._measure = 'coherence_magnitude'
 
 class icoherence(kramer_mv,undirected):
     humanname = 'Imaginary coherence'
@@ -157,7 +152,7 @@ class icoherence(kramer_mv,undirected):
         self._measure = 'imaginary_coherence'
 
 class phase_locking_value(kramer_mv,undirected):
-    humanname = 'Phase-locking value'
+    humanname = 'Phase locking value'
     labels = ['unsigned','spectral','undirected']
 
     def __init__(self,**kwargs):
@@ -166,7 +161,7 @@ class phase_locking_value(kramer_mv,undirected):
         self._measure = 'phase_locking_value'
 
 class phase_lag_index(kramer_mv,undirected):
-    humanname = 'Phase-lag index'
+    humanname = 'Phase lag index'
     labels = ['unsigned','spectral','undirected']
 
     def __init__(self,**kwargs):
@@ -175,7 +170,7 @@ class phase_lag_index(kramer_mv,undirected):
         self._measure = 'phase_lag_index'
 
 class weighted_phase_lag_index(kramer_mv,undirected):
-    humanname = 'Weighted phase-lag index'
+    humanname = 'Weighted phase lag index'
     labels = ['unsigned','spectral','undirected']
 
     def __init__(self,**kwargs):
@@ -184,7 +179,7 @@ class weighted_phase_lag_index(kramer_mv,undirected):
         self._measure = 'weighted_phase_lag_index'
 
 class debiased_squared_phase_lag_index(kramer_mv,undirected):
-    humanname = 'Debiased squared phase-lag index'
+    humanname = 'Debiased squared phase lag index'
     labels = ['unsigned','spectral','undirected']
 
     def __init__(self,**kwargs):
@@ -319,17 +314,15 @@ class partial_coherence(undirected,unsigned):
         np.fill_diagonal(pcoh,np.nan)
         return pcoh
 
-class spectral_granger(directed,unsigned):
+class spectral_granger(kramer_mv,directed,unsigned):
     humanname = 'Spectral Granger causality'
     name = 'sgc'
     labels = ['unsigned','embedding','spectral','directed','lagged']
 
-    def __init__(self,fs=1,fmin=0.0,fmax=0.5,order=None,max_order=50,statistic='mean'):
+    def __init__(self,fs=1,fmin=0.0,fmax=0.5,method='nonparametric',order=None,max_order=50,statistic='mean'):
         self._fs = fs # Not yet implemented
         self._fmin = fmin
         self._fmax = fmax
-        self._order = order
-        self._max_order = max_order
         if statistic == 'mean':
             self._statfn = np.mean
         elif statistic == 'max':
@@ -337,43 +330,53 @@ class spectral_granger(directed,unsigned):
         else:
             raise NameError(f'Unknown statistic {statistic}')
 
-        paramstr = f'_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}_order-{order}'.replace('.','-')
+        self._method = method
+        if self._method == 'nonparametric':
+            self._measure = 'pairwise_spectral_granger_prediction'
+            paramstr = f'_nonparametric_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}'.replace('.','-')
+        else:
+            self._order = order
+            self._max_order = max_order
+            paramstr = f'_parametric_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}_order-{order}'.replace('.','-')
         self.name = self.name + paramstr
 
     def _getkey(self):
-        return (self._order,self._max_order)
+        if self._method == 'nonparametric':
+            return (self._method,-1,-1)
+        else:
+            return (self._method,self._order,self._max_order)
 
     def _get_cache(self,data):
         key = self._getkey()
         try:
-            F = data.spectral_granger[key]
+            F = data.spectral_granger[key]['F']
+            freq = data.spectral_granger[key]['freq']
         except (AttributeError,KeyError):
-            z = data.to_numpy(squeeze=True)
-            time_series = ts.TimeSeries(z,sampling_interval=1)
-            F = nta.GrangerAnalyzer(time_series, order=self._order, max_order=self._max_order)
+
+            if self._method == 'nonparametric':
+                F, freq = super()._get_cache(data)
+            else:
+                z = data.to_numpy(squeeze=True)
+                time_series = ts.TimeSeries(z,sampling_interval=1)
+                GA = nta.GrangerAnalyzer(time_series, order=self._order, max_order=self._max_order)
+
+                triu_id = np.triu_indices(data.n_processes)
+                F = np.full(GA.causality_xy.shape,np.nan)
+                F[triu_id[0],triu_id[1],:] = GA.causality_xy[triu_id[0],triu_id[1],:]
+                F[triu_id[1],triu_id[0],:] = GA.causality_yx[triu_id[0],triu_id[1],:]
+                F = np.transpose(np.expand_dims(F,axis=3),axes=[3,2,1,0])
+                freq = GA.frequencies
             try:
-                data.spectral_granger[key] = F
+                data.spectral_granger[key] = {'freq': freq, 'F': F}
             except AttributeError:
-                data.spectral_granger = {key: F}
-        return F
+                data.spectral_granger = {key: {'freq': freq, 'F': F}}
+        return F, freq
 
     @parse_multivariate
     def adjacency(self,data):
-        F = self._get_cache(data)
-        m = data.n_processes
-
-        freq_id = np.where((F.frequencies >= self._fmin) * (F.frequencies <= self._fmax))[0]
-    
-        gc_triu = self._statfn(F.causality_xy[...,freq_id], axis=-1)
-        gc_tril = self._statfn(F.causality_yx[...,freq_id], axis=-1)
-
-        gc = np.empty((m,m))
-        triu_id = np.triu_indices(m)
-
-        gc[triu_id] = gc_triu[triu_id]
-        gc[triu_id[1],triu_id[0]] = gc_tril[triu_id]
-
-        return gc
+        F, freq = self._get_cache(data)
+        freq_id = np.where((freq >= self._fmin) * (freq <= self._fmax))[0]
+        return self._statfn(F[0,freq_id,:,:], axis=0)
 
 class envelope_correlation(undirected):
     humanname = 'Power envelope correlation'

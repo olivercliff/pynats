@@ -2,12 +2,13 @@ import mne.connectivity as mnec
 from pynats.base import directed, parse_bivariate, undirected, parse_multivariate, unsigned
 import numpy as np
 import warnings
+from functools import partial
 
 class mne(unsigned):
 
     _measure_list = []
 
-    def __init__(self,fs=1,fmin=0,fmax=None,statistic='mean'):
+    def __init__(self,fs=1,fmin=0,fmax=None,mode='wavelet',statistic='mean'):
         if fmax is None:
             fmax = fs/2
 
@@ -22,8 +23,12 @@ class mne(unsigned):
             self._statfn = np.nanmax
         else:
             raise NameError(f'Unknown statistic {statistic}')
-        paramstr = f'_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}'.replace('.','-')
-        self.name = self.name + paramstr
+        
+        self._statistic = statistic
+        self._mode = mode
+
+        paramstr = f'_{mode}_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}'.replace('.','-')
+        self.name += paramstr
 
         # Probably not good practice
         try:
@@ -49,18 +54,22 @@ class mne(unsigned):
         except AttributeError:
             z = np.moveaxis(data.to_numpy(),2,0)
 
-            cwt_freqs = np.linspace(0.2, 0.5, 100)
-            cwt_n_cycles = cwt_freqs / 7.
-            conn, freq, _, _, _ = mnec.spectral_connectivity(
-                    data=z, method=mne._measure_list, mode='cwt_morlet',
-                    sfreq=self._fs, mt_adaptive=True,
-                    fmin=5/data.n_observations,fmax=0.5,
-                    cwt_freqs=cwt_freqs,
-                    cwt_n_cycles=cwt_n_cycles, verbose='WARNING')
+            if self._mode == 'wavelet':
+                cwt_freqs = np.linspace(0.2, 0.5, 125)
+                cwt_n_cycles = cwt_freqs / 7.
+                connlist, freq, _, _, _ = mnec.spectral_connectivity(
+                        data=z, method=mne._measure_list, mode='cwt_morlet',
+                        sfreq=self._fs, mt_adaptive=True,
+                        fmin=5/data.n_observations,fmax=self._fs/2,
+                        cwt_freqs=cwt_freqs,
+                        cwt_n_cycles=cwt_n_cycles, verbose='WARNING')
+                
+                conn = dict(zip(mne._measure_list,connlist))
+
             data.mne = dict(conn=conn,freq=freq)
 
         # freq = conn.frequencies
-        myconn = conn[[i for i, m in enumerate(self._measure_list) if m == self._measure][0]]
+        myconn = conn[self.measure]
         freq_id = np.where((freq >= self._fmin) * (freq <= self._fmax))[0]
 
         return myconn, freq_id
@@ -68,34 +77,56 @@ class mne(unsigned):
     @parse_multivariate
     def adjacency(self, data):
         adj_freq, freq_id = self._get_cache(data)
-        adj = self._statfn(np.real(adj_freq[...,freq_id]), axis=(2,3))
+        try:
+            adj = self._statfn(adj_freq[...,freq_id,:], axis=(2,3))
+        except np.AxisError:
+            adj = self._statfn(adj_freq[...,freq_id], axis=2)
+        ui = np.triu_indices(data.n_processes,1)
+        adj[ui] = adj.T[ui]
         np.fill_diagonal(adj,np.nan)
         return adj
 
-class coherency(mne,undirected):
-    humanname = 'Coherency (wavelet)'
+def modify_stats(statfn,modifier):
+    def parsed_stats(stats,statfn,modifier,**kwargs):
+        return statfn(modifier(stats),**kwargs)
+    return partial(parsed_stats, statfn=statfn, modifier=modifier)
+
+class coherence_magnitude(mne,undirected):
+    humanname = 'Coherence magnitude (wavelet)'
     labels = ['unsigned','wavelet','undirected']
 
     def __init__(self,**kwargs):
-        self.name = 'cwt_coh'
+        self.name = 'cohmag'
         self._measure = 'coh'
         super().__init__(**kwargs)
+
+class coherence_phase(mne,undirected):
+    humanname = 'Coherence phase (wavelet)'
+    labels = ['unsigned','wavelet','undirected']
+
+    def __init__(self,**kwargs):
+        self.name = 'phase'
+        self._measure = 'cohy'
+        super().__init__(**kwargs)
+
+        # Take the angle before computing the statistic
+        self._statfn = modify_stats(self._statfn,np.angle)
 
 class icoherence(mne,undirected):
     humanname = 'Imaginary coherency (wavelet)'
     labels = ['unsigned','wavelet','undirected']
 
     def __init__(self,**kwargs):
-        self.name = 'cwt_icoh'
+        self.name = 'icoh'
         self._measure = 'imcoh'
         super().__init__(**kwargs)
 
 class phase_locking_value(mne,undirected):
-    humanname = 'Phase-locking value (wavelet)'
+    humanname = 'Phase locking value (wavelet)'
     labels = ['unsigned','wavelet','undirected']
 
     def __init__(self,**kwargs):
-        self.name = 'cwt_plv'
+        self.name = 'plv'
         self._measure = 'plv'
         super().__init__(**kwargs)
 
@@ -104,7 +135,7 @@ class pairwise_phase_consistency(mne,undirected):
     labels = ['unsigned','wavelet','undirected']
 
     def __init__(self,**kwargs):
-        self.name = 'cwt_ppc'
+        self.name = 'ppc'
         self._measure = 'ppc'
         super().__init__(**kwargs)
 
@@ -113,7 +144,7 @@ class phase_lag_index(mne,undirected):
     labels = ['unsigned','wavelet','undirected']
 
     def __init__(self,**kwargs):
-        self.name = 'cwt_pli'
+        self.name = 'pli'
         self._measure = 'pli'
         super().__init__(**kwargs)
 
@@ -122,7 +153,7 @@ class debiased_squared_phase_lag_index(mne,undirected):
     labels = ['unsigned','wavelet','undirected']
 
     def __init__(self,**kwargs):
-        self.name = 'cwt_dspli'
+        self.name = 'dspli'
         self._measure = 'pli2_unbiased'
         super().__init__(**kwargs)
 
@@ -131,7 +162,7 @@ class weighted_phase_lag_index(mne,undirected):
     labels = ['unsigned','wavelet','undirected']
 
     def __init__(self,**kwargs):
-        self.name = 'cwt_wspli'
+        self.name = 'wspli'
         self._measure = 'wpli'
         super().__init__(**kwargs)
 
@@ -140,7 +171,7 @@ class debiased_weighted_squared_phase_lag_index(mne,undirected):
     labels = ['unsigned','wavelet','undirected']
 
     def __init__(self,**kwargs):
-        self.name = 'cwt_dwspli'
+        self.name = 'dwspli'
         self._measure = 'wpli2_debiased'
         super().__init__(**kwargs)
 
@@ -149,8 +180,9 @@ class phase_slope_index(mne,directed):
     labels = ['unsigned','wavelet','undirected']
 
     def __init__(self,**kwargs):
-        self.name = 'cwt_psi'
+        self.name = 'psi'
         super().__init__(**kwargs)
+        self.name += f'_{self._statistic}'
 
     def _get_cache(self,data):
         try:
@@ -176,5 +208,8 @@ class phase_slope_index(mne,directed):
     def adjacency(self, data):
         adj_freq, freq_id = self._get_cache(data)
         adj = self._statfn(np.real(adj_freq[...,freq_id]), axis=(2,3))
+
+        ui = np.triu_indices(data.n_processes,1)
+        adj[ui] = adj.T[ui]
         np.fill_diagonal(adj,np.nan)
         return adj
