@@ -69,7 +69,10 @@ class jidt_base(unsigned):
 
     def __getstate__(self):
         state = dict(self.__dict__)
-        del state['_entropy_calc']
+        try:
+            del state['_entropy_calc']
+        except KeyError:
+            pass
         try:
             del state['_calc']
         except KeyError:

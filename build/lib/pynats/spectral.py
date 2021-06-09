@@ -37,6 +37,13 @@ class kramer(unsigned):
         self.name += paramstr
 
     @property
+    def key(self):
+        if isinstance(self,group_delay) or isinstance(self,phase_slope_index):
+            return (self.measure,self._fmin,self._fmax)
+        else:
+            return (self.measure,)
+
+    @property
     def measure(self):
         try:
             return self._measure
@@ -50,7 +57,7 @@ class kramer_mv(kramer):
 
     def _get_cache(self,data):
         try:
-            res = data.kramer_mv[self.measure]
+            res = data.kramer_mv[self.key]
             freq = data.kramer_mv['freq']
         except (AttributeError,KeyError):
             z = np.transpose(data.to_numpy(squeeze=True))
@@ -63,7 +70,7 @@ class kramer_mv(kramer):
 
             freq = conn.frequencies
             try:
-                data.kramer_mv[self.measure] = res
+                data.kramer_mv[self.key] = res
             except AttributeError:
                 data.kramer_mv = {'freq': freq, self.measure: res}
 

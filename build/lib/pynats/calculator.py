@@ -265,6 +265,7 @@ class Calculator():
 
     # Merge two calculators (to include additional statistics)
     def merge(self,other):
+        raise NotImplementedError()
         if self.name is not other.name:
             raise TypeError(f'Calculator name does do not match. Aborting merge.')
         

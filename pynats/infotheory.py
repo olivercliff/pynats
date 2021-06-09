@@ -44,6 +44,7 @@ class jidt_base(unsigned):
         self._kernel_width = kernel_width
         self._prop_k = prop_k
         self._dyn_corr_excl = dyn_corr_excl
+        self._entropy_calc = self._getcalc('entropy')
 
         self.name = self.name + '_' + estimator
         if estimator == 'kraskov':
@@ -64,8 +65,6 @@ class jidt_base(unsigned):
 
         if self._dyn_corr_excl:
             self.name = self.name + '_DCE'
-
-        self._entropy_calc = self._getcalc('entropy')
 
     def __getstate__(self):
         state = dict(self.__dict__)
