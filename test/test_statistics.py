@@ -167,36 +167,6 @@ def test_ccm():
         t_s = calc.bivariate(targ,src)
         assert s_t > t_s, (f'CCM test failed anchovy-temperature test for stat {s}: {s_t} < {t_s}')
 
-def test_anm():
-    # Load our wrapper
-    from pynats.causal import anm
-
-    # Load Tuebingen dataset
-    from cdt.data import load_dataset
-    t_data, _ = load_dataset('tuebingen')
-    src, targ = t_data['A']['pair1'], t_data['B']['pair1']
-
-    calc = anm(statistic='dir')
-    s_t = calc.bivariate(src,targ)
-    t_s = calc.bivariate(targ,src)
-
-    assert s_t > t_s, (f'{calc.humanname} test failed test for pair1: {s_t} < {t_s}')
-
-def test_gpfit():
-    # Load our wrapper
-    from pynats.causal import gpfit
-
-    # Load Tuebingen dataset
-    from cdt.data import load_dataset
-    t_data, _ = load_dataset('tuebingen')
-    src, targ = t_data['A']['pair1'], t_data['B']['pair1']
-
-    calc = gpfit(statistic='dir')
-    s_t = calc.bivariate(src,targ)
-    t_s = calc.bivariate(targ,src)
-
-    assert s_t > t_s, (f'{calc.humanname} test failed test for pair1: {s_t} < {t_s}')
-
 
 def test_load():
     import dill, os
@@ -284,8 +254,5 @@ if __name__ == '__main__':
     test_corr_mi()
     test_simple_correlation()
 
-    # Some tests from the creator's websites
-    test_ccm() # 3 tests
-
-    test_anm()
-    test_gpfit()
+    # This was a bit tricky to implement so just ensuring it passes a test from the creator's website
+    test_ccm()

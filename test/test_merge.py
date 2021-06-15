@@ -24,6 +24,7 @@ def test_create_yaml():
     with open(configfile1,'w') as f:
         yaml.dump(myconfig1,f)
 
+"""
 def test_merge_wrong_attr():
 
     data = Data(np.random.normal(size=(2,100)),name='tester')
@@ -52,6 +53,7 @@ def test_merge_output():
 
     calc0.merge(calc1)
     calc1.merge(calc0)
+"""
 
 def test_destroy_yaml():
     print(f'Removing yaml files.')
@@ -60,6 +62,6 @@ def test_destroy_yaml():
 
 if __name__ == '__main__':
     test_create_yaml()
-    test_merge_wrong_attr()
-    test_merge_output()
+    # test_merge_wrong_attr()
+    # test_merge_output()
     test_destroy_yaml()

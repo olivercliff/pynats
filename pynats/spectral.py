@@ -378,7 +378,7 @@ class spectral_granger(kramer_mv,directed,unsigned):
         freq_id = np.where((freq >= self._fmin) * (freq <= self._fmax))[0]
         return self._statfn(F[0,freq_id,:,:], axis=0)
 
-class envelope_correlation(undirected):
+class envelope_correlation(undirected,unsigned):
     humanname = 'Power envelope correlation'
     labels = ['unsigned','wavelet','undirected']
 

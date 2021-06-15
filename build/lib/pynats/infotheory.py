@@ -493,11 +493,11 @@ class integrated_information(undirected):
         self._options['type_of_phi'] = phitype
         self._options['type_of_dist'] = 'Gauss'
         self._options['normalization'] = normalization
-
         self.name += f'_{phitype}_t-{delay}_norm-{normalization}'
     
     @parse_bivariate
     def bivariate(self,data,i=None,j=None,verbose=False):
+        
         if not octave.exist('phi_comp'):
             path = os.path.dirname(os.path.abspath(__file__)) + '/lib/PhiToolbox/'
             octave.addpath(octave.genpath(path))
