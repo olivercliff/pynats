@@ -6,7 +6,7 @@ from pynats.base import directed, undirected, parse_univariate, parse_bivariate,
 from oct2py import octave, Struct
 import copy
 import os
-import warnings
+import logging
 
 """
 Contains relevant dependence measures from the information theory community.
@@ -14,7 +14,7 @@ Contains relevant dependence measures from the information theory community.
 if not jp.isJVMStarted():
     jarloc = os.path.dirname(os.path.abspath(__file__)) + '/lib/jidt/infodynamics.jar'
     # Change to debug info
-    print(f'Starting JVM with java class {jarloc}.')
+    logging.debug(f'Starting JVM with java class {jarloc}.')
     jp.startJVM(jp.getDefaultJVMPath(), '-ea', '-Djava.class.path=' + jarloc)
 
 class jidt_base(unsigned):
@@ -78,7 +78,7 @@ class jidt_base(unsigned):
             pass
 
         if '_entropy_calc' in state.keys() or '_calc' in state.keys():
-            print(f'{self.name} contains a calculator still')
+            logging.info(f'{self.name} contains a calculator still')
         return state
 
     def __setstate__(self,state):
@@ -269,7 +269,7 @@ class mutual_info(jidt_base,undirected):
             self._calc.setObservations(jp.JArray(jp.JDouble)(src),jp.JArray(jp.JDouble)(targ))
             return self._calc.computeAverageLocalOfObservations()
         except:
-            warnings.warn('MI calcs failed. Maybe check input data for Cholesky factorisation?')
+            logging.warning('MI calcs failed. Maybe check input data for Cholesky factorisation?')
             return np.NaN
 
 class time_lagged_mutual_info(mutual_info):
@@ -299,7 +299,7 @@ class time_lagged_mutual_info(mutual_info):
             self._calc.setObservations(jp.JArray(jp.JDouble,1)(src), jp.JArray(jp.JDouble,1)(targ))
             return self._calc.computeAverageLocalOfObservations()
         except:
-            warnings.warn('Time-lagged MI calcs failed. Maybe check input data for Cholesky factorisation?')
+            logging.warning('Time-lagged MI calcs failed. Maybe check input data for Cholesky factorisation?')
             return np.NaN
 
 class transfer_entropy(jidt_base,directed):
@@ -319,6 +319,8 @@ class transfer_entropy(jidt_base,directed):
         self._l_history = l_history
         self._l_tau = l_tau
 
+        if 'estimator' not in kwargs.keys() or kwargs['estimator'] == 'gaussian':
+            self.name = 'gc'
         super().__init__(**kwargs)
         self._calc = self._getcalc('transfer_entropy')
 
@@ -362,7 +364,7 @@ class transfer_entropy(jidt_base,directed):
             self._calc.setObservations(jp.JArray(jp.JDouble,1)(src), jp.JArray(jp.JDouble,1)(targ))
             return self._calc.computeAverageLocalOfObservations()
         except Exception as err:
-            warnings.warn(f'TE calcs failed: {err}.')
+            logging.warning(f'TE calcs failed: {err}.')
             return np.NaN
 
 class crossmap_entropy(jidt_base,directed):
@@ -373,6 +375,7 @@ class crossmap_entropy(jidt_base,directed):
 
     def __init__(self,history_length=10,**kwargs):
         super().__init__(**kwargs)
+        self.name += f'_k{history_length}'
         self._history_length = history_length
 
     @parse_bivariate

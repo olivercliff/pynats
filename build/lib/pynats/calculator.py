@@ -513,7 +513,10 @@ class CalculatorFrame():
 
             if with_labels:
                 df2 = pd.concat({calc.name: out[0]}, names=['Dataset']) 
-                mlabels = mlabels | out[1]
+                try:
+                    mlabels = mlabels | out[1]
+                except TypeError:
+                    mlabels.update(out[1])
                 dlabels[calc.name] = calc.labels
             else:
                 df2 = pd.concat({calc.name: out}, names=['Dataset']) 
@@ -593,8 +596,12 @@ class CorrelationFrame():
 
     def merge(self,other):
         self._mdf = self._mdf.append(other.mdf)
-        self._mlabels = self._mlabels | other.mlabels
-        self._dlabels = self._dlabels | other.dlabels
+        try:
+            self._mlabels = self._mlabels | other.mlabels
+            self._dlabels = self._dlabels | other.dlabels
+        except TypeError:
+            self._mlabels.update(other.mlabels)
+            self._dlabels.update(other.dlabels)
 
         # Make sure to re-run this otherwise we'll have the old one
         self._ddf = convert_mdf_to_ddf(self.mdf)

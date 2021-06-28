@@ -237,6 +237,7 @@ class global_alignment_kernel(time_warping):
 class lb_keogh(unsigned,directed):
     humanname = 'LB Keogh'
     name = 'lbk'
+    labels = ['unsigned','distance','temporal','undirected','lagged']
 
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):

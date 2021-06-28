@@ -5,10 +5,13 @@ import copy, yaml, importlib, time, warnings, os
 from tqdm import tqdm
 from collections import Counter
 from copy import deepcopy
+from logging import getLogger
 
 # From this package
 from .data import Data
 from .utils import convert_mdf_to_ddf
+
+logger = getLogger(__name__)
 
 class Calculator():
     """Calculator for one multivariate time-series dataset
@@ -79,7 +82,7 @@ class Calculator():
         try:
             return self._group
         except AttributeError as err:
-            warnings.warn('Group undefined. Call set_group() method first.')
+            logger.warning('Group undefined. Call set_group() method first.')
             raise AttributeError(err)
 
     @group.setter
@@ -91,7 +94,7 @@ class Calculator():
         try:
             return self._group_name
         except AttributeError as err:
-            print(f'Group name undefined. Call set_group() method first.')
+            logger.warnings(f'Group name undefined. Call set_group() method first.')
             return None
 
     @group_name.setter
@@ -134,7 +137,7 @@ class Calculator():
 
     def load_dataset(self,dataset):
         if not isinstance(dataset,Data):
-            self._dataset = Data.convert_to_numpy(dataset)
+            self._dataset = Data(Data.convert_to_numpy(dataset))
         else:
             self._dataset = dataset
         self._adjacency = np.full((self._nmeasures,
@@ -254,7 +257,7 @@ class Calculator():
         matches = [set(cls).issubset(labset) for cls in classes]
 
         if np.count_nonzero(matches) > 1:
-            warnings.warn(f'More than one match for classes {classes}')
+            logger.warning(f'More than one match for classes {classes}')
         else:
             try:
                 id = np.where(matches)[0][0]
@@ -290,11 +293,9 @@ class Calculator():
 
         if transformer is not None:
             try:
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    flatmat = transformer.fit_transform(flatmat)
+                flatmat = transformer.fit_transform(flatmat)
             except ValueError as err:
-                print(f'Something went from with the transformer: {err}')
+                warnings.warn(f'Something went wrong with the transformer: {err}')
 
         edges = [None] * n_edges
         edges[:-1:2] = [f'{i}->{j}' for i, j in zip(*il)]
@@ -445,7 +446,7 @@ class CalculatorFrame():
                     labels.append(config['labels'])
                     datasets.append(Data(data=file,dim_order=dim_order,name=names[-1],normalise=normalise,n_processes=n_processes,n_observations=n_observations))
                 except Exception as err:
-                    print(f'Loading dataset: {config} failed ({err}).')
+                    warnings.warn(f'Loading dataset: {config} failed ({err}).')
 
         self.init_from_list(datasets,names,labels,**kwargs)
 
@@ -467,7 +468,7 @@ class CalculatorFrame():
 
     @calculators.deleter
     def calculators(self):
-        print('Overwriting existing calculators.')
+        logger.debug('Overwriting existing calculators.')
         del(self._calculators)
 
     def merge(self,other):
@@ -607,10 +608,11 @@ class CorrelationFrame():
         self._ddf = convert_mdf_to_ddf(self.mdf)
 
     def get_feature_matrix(self,mthresh=0.8,dthresh=0.8):
-        fm = self.ddf.drop_duplicates()
-        fm = fm.dropna(axis=0,thresh=mthresh*fm.shape[1])
-        fm = fm.dropna(axis=1,thresh=dthresh*fm.shape[0])
-        return fm
+        if not hasattr(self,'_fm'):
+            self._fm = self.ddf.drop_duplicates()
+            self._fm = self._fm.dropna(axis=0,thresh=mthresh*self._fm.shape[1])
+            self._fm = self._fm.dropna(axis=1,thresh=dthresh*self._fm.shape[0])
+        return self._fm
 
     @staticmethod
     def _verify_classes(classes):
@@ -632,7 +634,7 @@ class CorrelationFrame():
 
         # Iterate through all 
         if np.count_nonzero(matches) > 1:
-            warnings.warn(f'More than one match for classes {classes}')
+            logger.warning(f'More than one match for classes {classes}')
         else:
             try:
                 myid = np.where(matches)[0][0]

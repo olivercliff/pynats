@@ -480,7 +480,7 @@ class stochastic_interaction(jidt_base,undirected):
 
         return H_src + H_targ - H_joint
 
-class integrated_information(undirected):
+class integrated_information(undirected,unsigned):
     
     humanname = "Integrated information"
     name = "phi"

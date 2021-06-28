@@ -12,18 +12,13 @@ calc = Calculator(dataset=data)
 
 calc.compute()
 
-# calc.prune()
-
-# Correlate all the features
 corrmat = calc.flatten().corr(method='spearman').dropna(axis=0,how='all').dropna(axis=1,how='all')
+print(f'Measures left after pruning: {corrmat.shape[0]}')
 
-sns.set(font_scale=0.6)
-
+sns.set(font_scale=0.5)
 g = sns.clustermap( corrmat.fillna(0), mask=corrmat.isna(),
                     center=0.0,
                     cmap='RdYlBu_r',
                     xticklabels=1, yticklabels=1 )
-
 plt.setp(g.ax_heatmap.xaxis.get_majorticklabels(), rotation=45, ha='right')
-
 plt.show()

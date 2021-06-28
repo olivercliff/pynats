@@ -80,6 +80,7 @@ class directed:
 
     humanname = 'Bivariate base class'
     name = 'bivariate_base'
+    labels = ['signed']
 
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):
@@ -128,6 +129,7 @@ class undirected(directed):
 
     humanname = 'Base class'
     name = 'base'
+    labels = ['unsigned']
 
     def ispositive(self):
         return False

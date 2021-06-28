@@ -25,7 +25,7 @@ setup(
                         'lib/PhiToolbox/utility/Gauss/H_gauss.m',
                         'lib/PhiToolbox/utility/Gauss/logdet.m']},
     include_package_data=True,
-    version='0.1.24',
+    version='0.2.0',
     description='Network analysis for time series',
     author='Oliver M. Cliff',
     author_email='oliver.m.cliff@gmail.com',
