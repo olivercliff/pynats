@@ -67,7 +67,7 @@
 
     - squared: False
 
-  # Measures based on cross-correlation (squared means we square the xcorr, not the output)
+  # statistics based on cross-correlation (squared means we square the xcorr, not the output)
   xcorr:
     - statistic: 'max'
 
@@ -90,6 +90,7 @@
 
   linearmodel:
     - model: Ridge
+    - model: Lasso
     - model: SGDRegressor
     - model: ElasticNet
     - model: BayesianRidge
@@ -126,7 +127,7 @@
   # Information-geometric conditional independence
   igci:
 
-# Information-theoretic measures
+# Information-theoretic statistics
 .infotheory:
 
   joint_entropy: # No theiler window yet
@@ -298,7 +299,7 @@
       normalization: 1
 
   
-# Measures that analyse in the time-domain
+# statistics that analyse in the time-domain
 .temporal:
 
   # Cointegration
@@ -463,7 +464,7 @@
     statistic: max
     squared: True
 
-# Measures that analyse in the frequency-domain (see Schoegl and Supp, 2006)
+# statistics that analyse in the frequency-domain (see Schoegl and Supp, 2006)
 .spectral:
 
   coherence_phase:
@@ -790,30 +791,6 @@
       fmax: 0.5
       statistic: delay
 
-    - fmin: 0
-      fmax: 0.5
-      statistic: slope
-
-    - fmin: 0
-      fmax: 0.25
-      statistic: slope
-
-    - fmin: 0.25
-      fmax: 0.5
-      statistic: slope
-    
-    - fmin: 0
-      fmax: 0.5
-      statistic: rvalue
-
-    - fmin: 0
-      fmax: 0.25
-      statistic: rvalue
-
-    - fmin: 0.25
-      fmax: 0.5
-      statistic: rvalue
-
   spectral_granger:
       # Non-parametric Granger causality (no VAR model)
     - method: nonparametric
@@ -977,7 +954,7 @@
       log: True
       absolute: True
 
-# Measures that analyse in the wavlet-domain (only Mortlet wavelet's at the moment)
+# statistics that analyse in the wavlet-domain (only Mortlet wavelet's at the moment)
 .wavelet:
 
   # Coherence (ordinal or squared? real components of the coherence)

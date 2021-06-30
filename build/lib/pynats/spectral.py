@@ -21,7 +21,7 @@ class kramer(unsigned):
             
         self._fs = fs
         if fs != 1:
-            warnings.warn('Multiple sampling frequencies not yet handled.')
+            logger.warning('Multiple sampling frequencies not yet handled.')
         self._fmin = fmin
         self._fmax = fmax
         if statistic == 'mean':
@@ -374,9 +374,13 @@ class spectral_granger(kramer_mv,directed,unsigned):
 
     @parse_multivariate
     def adjacency(self,data):
-        F, freq = self._get_cache(data)
-        freq_id = np.where((freq >= self._fmin) * (freq <= self._fmax))[0]
-        return self._statfn(F[0,freq_id,:,:], axis=0)
+        try:
+            F, freq = self._get_cache(data)
+            freq_id = np.where((freq >= self._fmin) * (freq <= self._fmax))[0]
+            return self._statfn(F[0,freq_id,:,:], axis=0)
+        except ValueError as err:
+            logger.warning(err)
+            return np.full((data.n_processes,data.n_processes),np.nan)
 
 class envelope_correlation(undirected,unsigned):
     humanname = 'Power envelope correlation'

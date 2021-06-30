@@ -13,7 +13,7 @@ calc = Calculator(dataset=data)
 calc.compute()
 
 corrmat = calc.flatten().corr(method='spearman').dropna(axis=0,how='all').dropna(axis=1,how='all')
-print(f'Measures left after pruning: {corrmat.shape[0]}')
+print(f'Number of statistics left after pruning: {corrmat.shape[0]}')
 
 sns.set(font_scale=0.5)
 g = sns.clustermap( corrmat.fillna(0), mask=corrmat.isna(),

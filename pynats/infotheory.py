@@ -9,7 +9,7 @@ import os
 import logging
 
 """
-Contains relevant dependence measures from the information theory community.
+Contains relevant dependence statistics from the information theory community.
 """
 if not jp.isJVMStarted():
     jarloc = os.path.dirname(os.path.abspath(__file__)) + '/lib/jidt/infodynamics.jar'
@@ -470,6 +470,7 @@ class stochastic_interaction(jidt_base,undirected):
     def __init__(self,delay=1,**kwargs):
         super().__init__(**kwargs)
         self._delay = delay
+        self.name += f'_k-{delay}'
 
     @parse_bivariate
     def bivariate(self,data,i=None,j=None,verbose=False):

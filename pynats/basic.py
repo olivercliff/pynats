@@ -5,13 +5,13 @@ from pynats.base import undirected, directed, parse_bivariate, parse_multivariat
 import warnings
 
 class covariance_estimators(undirected,signed):
-    """ Base class for (functional) connectivity-based measures 
+    """ Base class for (functional) connectivity-based statistics 
     
     Information on covariance estimators at: https://scikit-learn.org/stable/modules/covariance.html
     """
 
     humanname = "Pearon's product-moment correlation coefficient"
-    labels = ['correlation','connectivity','unordered','linear','undirected']
+    labels = ['basic','unordered','linear','undirected']
 
     def __init__(self,kind,estimator='EmpiricalCovariance',normalise=True,squared=False,normalised=True):
         paramstr = f'_{estimator}'
@@ -74,7 +74,7 @@ class precision(covariance_estimators):
 class xcorr(undirected,signed):
 
     humanname = "Cross correlation"
-    labels = ['correlation','unordered','lagged','linear','undirected']
+    labels = ['basic','lagged','linear','undirected']
 
     def __init__(self,squared=False,statistic='max',sigonly=True):
         self.name = 'xcorr'
@@ -135,7 +135,7 @@ class spearmanr(undirected,signed):
 
     humanname = "Spearman's correlation coefficient"
     name = "spearmanr"
-    labels = ['correlation','unordered','rank','linear','undirected']
+    labels = ['basic','unordered','rank','linear','undirected']
 
     def __init__(self,squared=False):
         self._squared = squared
@@ -158,7 +158,7 @@ class kendalltau(undirected,signed):
 
     humanname = "Kendall's tau"
     name = "kendalltau"
-    labels = ['correlation','unordered','rank','linear','undirected']
+    labels = ['basic','unordered','rank','linear','undirected']
 
     def __init__(self,squared=False):
         self._squared = squared

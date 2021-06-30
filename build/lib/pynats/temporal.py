@@ -1,4 +1,4 @@
-from statsmodels.tsa.stattools import coint as ci
+from statsmodels.tsa import stattools
 from statsmodels.tsa.vector_ar.vecm import coint_johansen
 import numpy as np
 import pyEDM as edm
@@ -6,7 +6,7 @@ import pandas as pd
 from math import isnan
 from hyppo.time_series import MGCX, DcorrX
 import warnings
-from pynats.base import directed, undirected, parse_bivariate, unsigned, signed
+from pynats.base import directed, undirected, parse_bivariate, parse_multivariate, unsigned, signed
 
 import importlib
 import scipy.spatial.distance as distance
@@ -19,37 +19,58 @@ class coint(undirected,unsigned):
     name = "coint"
     labels = ['unsigned','temporal','undirected','lagged']
 
-    def __init__(self,method='johansen',statistic='trace_stat'):
+    def __init__(self,method='johansen',statistic='trace_stat',
+                    det_order=1,k_ar_diff=1,
+                    autolag='aic',maxlag=10,trend='c'):
         self._method = method
         self._statistic = statistic
-        self.name = self.name + '_' + method + '_' + statistic
+        if method == 'johansen':
+            self.name += f'_{method}_{statistic}_order-{det_order}_ardiff-{k_ar_diff}'
+            self._det_order = det_order
+            self._k_ar_diff = k_ar_diff
+        else:
+            self._autolag = autolag
+            self._maxlag = maxlag
+            self._trend = trend
+            self.name += f'_{method}_{statistic}_trend-{trend}_autolag-{autolag}_maxlag-{maxlag}'
+
+    @property
+    def key(self):
+        key = (self._method,)
+        if self._method == 'johansen':
+            return key + (self._det_order,self._k_ar_diff)
+        else:
+            return key + (self._autolag,self._maxlag,self._trend)
+
+    def _from_cache(self,data,i,j):
+        idx = (i,j)
+        try:
+            ci = data.coint[self.key][idx]
+        except (KeyError,AttributeError):
+            z = data.to_numpy(squeeze=True)
+
+            if self._method == 'aeg':
+                stats = stattools.coint(z[i],z[j],autolag=self._autolag,maxlag=self._maxlag,trend=self._trend)
+                ci = {'tstat': stats[0]}
+            else:
+                stats = coint_johansen(z[[i,j]].T,det_order=self._det_order,k_ar_diff=self._k_ar_diff)
+                ci = {'max_eig_stat': stats.max_eig_stat[0], 'trace_stat': stats.trace_stat[0]}
+
+            try:
+                data.coint[self.key][idx] = ci
+            except AttributeError:
+                data.coint = {self.key: {idx: ci} }
+            except KeyError:
+                data.coint[self.key] = {idx: ci}
+            data.coint[self.key][(j,i)] = ci
+
+        return ci
 
     # Return the negative t-statistic (proxy for how co-integrated they are)
     @parse_bivariate
     def bivariate(self,data,i=None,j=None,verbose=False):
-
-        z = data.to_numpy(squeeze=True)
-        M = data.n_processes
-
-        if not hasattr(data,'coint'):
-            data.coint = {'max_eig_stat': np.full((M, M), np.NaN), 'trace_stat': np.full((M, M), np.NaN),
-                            'tstat': np.full((M, M), np.NaN), 'pvalue': np.full((M, M), np.NaN)}
-
-        if self._method == 'johansen':
-            if isnan(data.coint['max_eig_stat'][i,j]):
-                z_ij_T = np.transpose(z[[i,j]])
-                stats = coint_johansen(z_ij_T,det_order=0,k_ar_diff=1)
-                data.coint['max_eig_stat'][i,j] = stats.max_eig_stat[0]
-                data.coint['trace_stat'][i,j] = stats.trace_stat[0]
-        elif self._method == 'aeg':
-            if isnan(data.coint['tstat'][i,j]):
-                stats = ci(z[i],z[j])
-                data.coint['tstat'][i,j] = stats[0]
-                data.coint['pvalue'][i,j] = stats[1]
-        else:
-            raise TypeError(f'Unknown statistic: {self._method}')
-
-        return data.coint[self._statistic][i,j]
+        ci = self._from_cache(data,i,j)
+        return ci[self._statistic]
 
 class ccm(directed,unsigned):
 
@@ -57,77 +78,92 @@ class ccm(directed,unsigned):
     name = "ccm"
     labels = ['embedding','temporal','directed','lagged','causal']
 
-    def __init__(self,statistic='mean'):
+    def __init__(self,statistic='mean',embedding_dimension=None):
         self._statistic = statistic
-        self.name = self.name + '_' + statistic
+        self._E = embedding_dimension
+
+        self.name += f'_E-{embedding_dimension}_{statistic}'
         if statistic == 'diff':
             self.issigned = lambda : True
             self.labels += ['signed']
         else:
             self.labels += ['unsigned']
 
-    @staticmethod
-    def _precompute(data):
-        z = data.to_numpy(squeeze=True)
+    @property
+    def key(self):
+        return self._E
 
-        M = data.n_processes
-        N = data.n_observations
-        df = pd.DataFrame(range(0,N),columns=['index'])
-        embedding = np.zeros((M,1))
+    def _from_cache(self,data):
+        try:
+            ccmf = data.ccm[self.key]
+        except (AttributeError,KeyError):
+            z = data.to_numpy(squeeze=True)
 
-        names = []
+            M = data.n_processes
+            N = data.n_observations
+            df = pd.DataFrame(np.concatenate([np.atleast_2d(np.arange(0,N)),z]).T,
+                                columns=['index']+[f'proc{p}' for p in range(M)])
 
-        # First pass: infer optimal embedding
-        for _i in range(M):
-            names.append('var' + str(_i))
-            df[names[_i]] = z[_i]
-            pred = str(10) + ' ' + str(N-10)
-            embed_df = edm.EmbedDimension(dataFrame=df,lib=pred,
-                                            pred=pred,columns=str(_i),showPlot=False)
-            embedding[_i] = embed_df.iloc[embed_df.idxmax().rho,0]
-        
-        # Get some reasonable library lengths
-        nlibs = 5
+            # Get the embedding
+            if self._E is None:
+                embedding = np.zeros((M,1))
 
-        # Second pass: compute CCM
-        score = np.zeros((M,M,nlibs+1))
-        for _i in range(M):
-            for _j in range(_i+1,M):
-                E = int(max(embedding[[_i,_j]]))
-                upperE = int(np.floor((N-E-1)/10)*10)
-                lowerE = int(np.ceil(2*E/10)*10)
-                inc = int((upperE-lowerE) / nlibs)
-                lib_sizes = str(lowerE) + ' ' + str(upperE) + ' ' + str(inc)
-                ccm_df = edm.CCM(dataFrame=df,E=E,columns=names[_i],target=names[_j],
-                                    libSizes=lib_sizes,sample=100)
-                sc1 = ccm_df.iloc[:,1]
-                sc2 = ccm_df.iloc[:,2]
-                score[_i,_j] = np.array(sc1)
-                score[_j,_i] = np.array(sc2)
+                # Infer optimal embedding from simplex projection
+                for _i in range(M):
+                    pred = str(10) + ' ' + str(N-10)
+                    embed_df = edm.EmbedDimension(dataFrame=df,lib=pred,
+                                                    pred=pred,columns=df.columns.values[_i+1],showPlot=False)
+                    embedding[_i] = embed_df.max()['E']
+            else:
+                embedding = np.array([self._E]*M)
 
-        data.ccm = {'embedding': embedding, 'score': score}
+            # Compute CCM from the fixed or optimal embedding
+            nlibs = 21
+            ccmf = np.zeros((M,M,nlibs+1))
+            for _i in range(M):
+                for _j in range(_i+1,M):
+                    try:
+                        E = int(max(embedding[[_i,_j]]))
+                    except NameError:
+                        E = int(self._E)
 
-    @parse_bivariate
-    def bivariate(self,data,i=None,j=None):
-        if not hasattr(data,'ccm'):
-            ccm._precompute(data)
+                    # Get list of library sizes given nlibs and lower/upper bounds based on embedding dimension
+                    upperE = int(np.floor((N-E-1)/10)*10)
+                    lowerE = int(np.ceil(2*E/10)*10)
+                    inc = int((upperE-lowerE) / nlibs)
+                    lib_sizes = str(lowerE) + ' ' + str(upperE) + ' ' + str(inc)
+                    srcname = df.columns.values[_i+1]
+                    targname = df.columns.values[_j+1]
+                    ccm_df = edm.CCM(dataFrame=df,E=E,
+                                        columns=srcname,target=targname,
+                                        libSizes=lib_sizes,sample=100)
+                    ccmf[_i,_j] = ccm_df.iloc[:,1].values[:(nlibs+1)]
+                    ccmf[_j,_i] = ccm_df.iloc[:,2].values[:(nlibs+1)]
+
+            try:
+                data.ccm[self.key] = ccmf
+            except AttributeError:
+                data.ccm = {self.key: ccmf}
+        return ccmf
+
+    @parse_multivariate
+    def adjacency(self,data):
+        ccmf = self._from_cache(data)
 
         if self._statistic == 'mean':
-            stat = np.nanmean(data.ccm['score'][i,j])
+            return np.nanmean(ccmf,axis=2)
         elif self._statistic == 'max':
-            stat = np.nanmax(data.ccm['score'][i,j])
+            return np.nanmax(ccmf,axis=2)
         elif self._statistic == 'diff':
-            stat = np.nanmean(data.ccm['score'][i,j] - data.ccm['score'][j,i])
+            return np.nanmean(ccmf-np.transpose(ccmf,axes=[1,0,2]),axis=2)
         else:
             raise TypeError(f'Unknown statistic: {self._statistic}')
 
-        return stat
-
 class dcorrx(directed,unsigned):
-    """ Multi-graph correlation for time series
+    """ Cross-distance correlation
     """
 
-    humanname = "Multi-scale graph correlation"
+    humanname = "Cross-distance correlation"
     name = "dcorrx"
     labels = ['unsigned','independence','temporal','directed','lagged']
 
@@ -140,16 +176,14 @@ class dcorrx(directed,unsigned):
         z = data.to_numpy()
         x = z[i]
         y = z[j]
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            stat, _ = DcorrX(max_lag=self._max_lag).statistic(x,y)
+        stat, _ = DcorrX(max_lag=self._max_lag).statistic(x,y)
         return stat
 
 class mgcx(directed,unsigned):
-    """ Multi-graph correlation for time series
+    """ Cross-multiscale graph correlation
     """
 
-    humanname = "Multi-scale graph correlation"
+    humanname = "Cross-multiscale graph correlation"
     name = "mgcx"
     labels = ['unsigned','independence','temporal','directed','lagged']
 
@@ -162,9 +196,7 @@ class mgcx(directed,unsigned):
         z = data.to_numpy()
         x = z[i]
         y = z[j]
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            stat, _, _ = MGCX(max_lag=self._max_lag).statistic(x,y)
+        stat, _, _ = MGCX(max_lag=self._max_lag).statistic(x,y)
         return stat
 
 class time_warping(undirected, unsigned):
@@ -172,7 +204,10 @@ class time_warping(undirected, unsigned):
     labels = ['unsigned','distance','temporal','undirected','lagged']
 
     def __init__(self,global_constraint='itakura'):
-        self.name += '_' + global_constraint
+        gcstr = global_constraint
+        if gcstr is not None:
+            gcstr = gcstr.replace('_','-')
+        self.name += f'_constraint-{gcstr}'
         self._global_constraint = global_constraint
 
     @property
@@ -244,13 +279,13 @@ class lb_keogh(unsigned,directed):
         z = data.to_numpy(squeeze=True)
         return tslearn.metrics.lb_keogh(ts_query=z[j],ts_candidate=z[j])
 
-class barycenter(undirected,signed):
+class barycenter(directed,signed):
 
     humanname = 'Barycenter'
     name = 'bary'
     labels = ['signed','undirected','unpaired']
 
-    def __init__(self,mode='euclidean',statistic='mean'):
+    def __init__(self,mode='euclidean',squared=False,statistic='mean'):
         if mode == 'euclidean':
             self._fn = euclidean_barycenter
         elif mode == 'dtw':
@@ -263,10 +298,16 @@ class barycenter(undirected,signed):
             raise NameError(f'Unknown barycenter mode: {mode}')
         self._mode = mode
 
+        self._squared = squared
+        self._preproc = lambda x : x
+        if squared:
+            self._preproc = lambda x : x**2
+            self.name += f'-sq'
+            
         if statistic == 'mean':
-            self._statfn = np.nanmean
+            self._statfn = lambda x : np.nanmean(self._preproc(x))
         elif statistic == 'max':
-            self._statfn = np.nanmax
+            self._statfn = lambda x : np.nanmax(self._preproc(x))
         else:
             raise NameError(f'Unknown statistic: {statistic}')
 
@@ -276,13 +317,16 @@ class barycenter(undirected,signed):
     def bivariate(self,data,i=None,j=None):
 
         try:
-            barycenter = data.barycenter[self._mode]
+            bc = data.barycenter[self._mode][(i,j)]
         except (AttributeError,KeyError):
             z = data.to_numpy(squeeze=True)
-            barycenter = self._fn(z)
+            bc = self._fn(z[[i,j]])
             try:
-                data.barycenter[self._mode] = barycenter
+                data.barycenter[self._mode][(i,j)] = bc
             except AttributeError:
-                data.barycenter = {self._mode: barycenter}
+                data.barycenter = {self._mode: {(i,j): bc}}
+            except KeyError:
+                data.barycenter[self._mode] = {(i,j): bc}
+            data.barycenter[self._mode][(j,i)] = data.barycenter[self._mode][(i,j)]
         
-        return self._statfn(barycenter)
+        return self._statfn(bc)

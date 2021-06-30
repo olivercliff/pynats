@@ -17,7 +17,7 @@ class coint(undirected,unsigned):
     
     humanname = "Cointegration"
     name = "coint"
-    labels = ['unsigned','temporal','undirected','lagged']
+    labels = ['unsigned','temporal','undirected','lagged','nonlinear']
 
     def __init__(self,method='johansen',statistic='trace_stat',
                     det_order=1,k_ar_diff=1,
@@ -76,7 +76,7 @@ class ccm(directed,unsigned):
 
     humanname = "Convergent cross-maping"
     name = "ccm"
-    labels = ['embedding','temporal','directed','lagged','causal']
+    labels = ['embedding','temporal','directed','lagged','causal','nonlinear']
 
     def __init__(self,statistic='mean',embedding_dimension=None):
         self._statistic = statistic
@@ -165,7 +165,7 @@ class dcorrx(directed,unsigned):
 
     humanname = "Cross-distance correlation"
     name = "dcorrx"
-    labels = ['unsigned','independence','temporal','directed','lagged']
+    labels = ['unsigned','independence','temporal','directed','lagged','nonlinear']
 
     def __init__(self,max_lag=1):
         self._max_lag = max_lag
@@ -185,7 +185,7 @@ class mgcx(directed,unsigned):
 
     humanname = "Cross-multiscale graph correlation"
     name = "mgcx"
-    labels = ['unsigned','independence','temporal','directed','lagged']
+    labels = ['unsigned','independence','temporal','directed','lagged','nonlinear']
 
     def __init__(self,max_lag=1):
         self._max_lag = max_lag
@@ -201,13 +201,13 @@ class mgcx(directed,unsigned):
 
 class time_warping(undirected, unsigned):
 
-    labels = ['unsigned','distance','temporal','undirected','lagged']
+    labels = ['unsigned','distance','temporal','undirected','lagged','nonlinear']
 
-    def __init__(self,global_constraint='itakura'):
+    def __init__(self,global_constraint=None):
         gcstr = global_constraint
         if gcstr is not None:
             gcstr = gcstr.replace('_','-')
-        self.name += f'_constraint-{gcstr}'
+            self.name += f'_constraint-{gcstr}'
         self._global_constraint = global_constraint
 
     @property
@@ -283,7 +283,7 @@ class barycenter(directed,signed):
 
     humanname = 'Barycenter'
     name = 'bary'
-    labels = ['signed','undirected','unpaired']
+    labels = ['signed','undirected','unpaired','temporal','nonlinear']
 
     def __init__(self,mode='euclidean',squared=False,statistic='mean'):
         if mode == 'euclidean':

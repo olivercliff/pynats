@@ -25,7 +25,7 @@ setup(
                         'lib/PhiToolbox/utility/Gauss/H_gauss.m',
                         'lib/PhiToolbox/utility/Gauss/logdet.m']},
     include_package_data=True,
-    version='0.2.0',
+    version='0.2.1',
     description='Network analysis for time series',
     author='Oliver M. Cliff',
     author_email='oliver.m.cliff@gmail.com',
@@ -51,7 +51,6 @@ setup(
                         'statsmodels>=0.12.0',
                         'pyyaml>=5.3.1',
                         'tqdm>=4.50.2',
-                        'nilearn>=0.6.2',
                         'nitime==0.9',
                         'hyppo>=0.2.1',
                         'pyEDM>=1.0.3.2',
@@ -65,5 +64,6 @@ setup(
                         'oct2py==5.2.0',
                         'dtw-python==1.1.10',
                         'tslearn==0.5.1',
-                        'mne==0.23.0']
+                        'mne==0.23.0',
+                        'seaborn==0.11.0']
 )

@@ -23,7 +23,7 @@ def get_data():
     procs = np.random.normal(size=(2,T))
     procs[1] += 0.5 * procs[0]
 
-    # For each measure, check that the adjacencies match the subclass (directed/undirected and bivariate->adjacency)dim_order='ps')
+    # For each statistic, check that the adjacencies match the subclass (directed/undirected and bivariate->adjacency)dim_order='ps')
     return Data(np.vstack(procs),dim_order='ps',normalise=True)
 
 def get_more_data():
@@ -40,7 +40,7 @@ def get_more_data():
             else:
                 p[t] += ar_params * procs[_i-1][t-1] # Time-lagged correlation
 
-    # For each measure, check that the adjacencies match the subclass (directed/undirected and bivariate->adjacency)dim_order='ps')
+    # For each statistic, check that the adjacencies match the subclass (directed/undirected and bivariate->adjacency)dim_order='ps')
     return Data(np.vstack(procs),dim_order='ps',normalise=True)
 
 def test_yaml():
@@ -50,11 +50,11 @@ def test_yaml():
     """
     TODO: check the data properties all match
     """
-    assert calc.n_measures == len(calc._measures), (
-                'Property not equal to number of measures')
+    assert calc.n_statistics == len(calc._statistics), (
+                'Property not equal to number of statistics')
 
 def test_adjacency():
-    # Load in all base measures from the YAML file
+    # Load in all base statistics from the YAML file
 
     data = get_data()
     calc = Calculator(dataset=data)
@@ -75,8 +75,8 @@ def test_adjacency():
     excuse_stochastic = ['ccm_max','ccm_mean','ccm_diff','gd_fs-1_fmin-0-05_fmax-1-57']
 
     p = data.to_numpy()
-    for _i, m in enumerate(calc._measures):
-        print(f'[{_i}/{calc.n_measures}] Testing measure {m.name} ({m.humanname})')
+    for _i, m in enumerate(calc._statistics):
+        print(f'[{_i}/{calc.n_statistics}] Testing statistic {m.name} ({m.humanname})')
 
         if any([m.name == e for e in excuse_stochastic]):
             continue
@@ -131,16 +131,16 @@ def test_adjacency():
                     if not any([m.name == e for e in excuse_directed]):
                         if isinstance(m,undirected):
                             s_t == pytest.approx(t_s, rel=1e-1, abs=1e-2), (
-                                f'{m.name} ({m.humanname}): Found directed measurement for entry ({i},{j}): {s_t} != {t_s}')
+                                f'{m.name} ({m.humanname}): Found directed statisticment for entry ({i},{j}): {s_t} != {t_s}')
                         else:
                             s_t != pytest.approx(t_s, rel=1e-1, abs=1e-2), (
-                                    f'{m.name} ({m.humanname}): Found undirected measurement for entry ({i},{j}): {s_t} == {t_s}')
+                                    f'{m.name} ({m.humanname}): Found undirected statisticment for entry ({i},{j}): {s_t} == {t_s}')
 
 """
-    Individual tests specific to each measure.
+    Individual tests specific to each statistic.
 
     These tests are either super simple (e.g., checking correlation == correlation)
-    or taken from the documentation examples for more complex measures (e.g., CCM or transfer entropy).
+    or taken from the documentation examples for more complex statistics (e.g., CCM or transfer entropy).
 
     More advanced testing will be *slowly* introduced into the package
 """
@@ -190,7 +190,7 @@ def test_simple_correlation():
     inddat = get_inddata()
     depdat = get_data()
     calc = Calculator()
-    for m in calc._measures:
+    for m in calc._statistics:
         try:
             x, y = depdat.to_numpy()[[0,1]]
             _, y_ind = inddat.to_numpy()[[0,1]]

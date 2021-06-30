@@ -34,9 +34,6 @@ class mne(unsigned):
         except AttributeError:
             raise AttributeError(f'Include measure for {self.humanname}')
 
-    def _get_measure(self,C):
-        raise NotImplementedError
-
     def _get_cache(self,data):
         try:
             conn, freq = data.mne[self.measure]

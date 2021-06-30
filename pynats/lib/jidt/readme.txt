@@ -5,10 +5,10 @@ Copyright (C) 2017-     Joseph T. Lizier, Ipek Özdemir and Pedro Mediano
 
 Version 1.5 (see release notes below)
 
-JIDT provides a standalone, open source code Java implementation (usable in Matlab, Octave and Python) of information-theoretic measures of distributed computation in complex systems: i.e. information storage, transfer and modification.
+JIDT provides a standalone, open source code Java implementation (usable in Matlab, Octave and Python) of information-theoretic statistics of distributed computation in complex systems: i.e. information storage, transfer and modification.
 
 This includes implementations for:
-- both discrete and continuous-valued variables, principally for the measures transfer entropy, mutual information and active information storage;
+- both discrete and continuous-valued variables, principally for the statistics transfer entropy, mutual information and active information storage;
 - using various types of estimators (e.g. Kraskov-Stögbauer-Grassberger estimators, kernel estimation, linear-Gaussian).
     
 =============
@@ -60,7 +60,7 @@ Documentation
 
 A research paper describing the toolkit is included in the top level directory -- "InfoDynamicsToolkit.pdf".
 
-A tutorial, providing background to the information-theoretic measures, various estimators, and then to the JIDT toolkit itself is included in the tutorial folder (see "JIDT-TutorialSlides.pdf" for the tutorial slides, and "README-TutorialAndExercise.pdf" for further description of the tutorial exercises).
+A tutorial, providing background to the information-theoretic statistics, various estimators, and then to the JIDT toolkit itself is included in the tutorial folder (see "JIDT-TutorialSlides.pdf" for the tutorial slides, and "README-TutorialAndExercise.pdf" for further description of the tutorial exercises).
 
 Javadocs for the toolkit are included in the full distribution at javadocs.
 They can also be generated using "ant javadocs" (useful if you are on a git clone).
@@ -78,7 +78,7 @@ You can also join our email discussion group jidt-discuss at http://groups.googl
 
 Several sets of demonstration code are distributed with the toolkit:
 
- a. demos/AutoAnalyser -- a GUI tool to compute the information-theoretic measures on a chosen data set with the toolkit, and also automatically generate code in Java, Python and Matlab to show how to do this calculation with the toolkit. See description at https://github.com/jlizier/jidt/wiki/AutoAnalyser
+ a. demos/AutoAnalyser -- a GUI tool to compute the information-theoretic statistics on a chosen data set with the toolkit, and also automatically generate code in Java, Python and Matlab to show how to do this calculation with the toolkit. See description at https://github.com/jlizier/jidt/wiki/AutoAnalyser
 
  b. demos/java -- basic examples on easily using the Java toolkit -- run these from the shell scripts in this directory -- see description at https://github.com/jlizier/jidt/wiki/SimpleJavaExamples
 
@@ -96,7 +96,7 @@ Several sets of demonstration code are distributed with the toolkit:
 
  d. demos/octave/CellularAutomata -- using the Java toolkit to plot local information dynamics profiles in cellular automata; the toolkit is run under Octave or Matlab -- see description at https://github.com/jlizier/jidt/wiki/CellularAutomataDemos
  
- e. demos/octave/SchreiberTransferEntropyExamples -- recreates the transfer entropy examples in Schreiber's original paper presenting this measure; shows the correct parameter settings to reproduce these results  -- see description at https://github.com/jlizier/jidt/wiki/SchreiberTeDemos
+ e. demos/octave/SchreiberTransferEntropyExamples -- recreates the transfer entropy examples in Schreiber's original paper presenting this statistic; shows the correct parameter settings to reproduce these results  -- see description at https://github.com/jlizier/jidt/wiki/SchreiberTeDemos
  
  f. demos/octave/DetectingInteractionLags -- demonstration of using the transfer entropy with source-destination lags; the demo is run under Octave or Matlab -- see description at https://github.com/jlizier/jidt/wiki/DetectingInteractionLags
 
@@ -215,7 +215,7 @@ Javadocs made ready for release;
 Switched source->destination arguments for discrete TE calculators to be with source first in line with continuous calculators;
 Renamed all discrete calculators to have Discrete suffix -- TE and conditional TE calculators also renamed to remove "Apparent" prefix and change "Complete" to "Conditional";
 Kraskov estimators now using 4 nearest neighbours by default;
-Unit test for Gaussian TE against ChaLearn Granger causality measurement;
+Unit test for Gaussian TE against ChaLearn Granger causality statisticment;
 Added Schreiber TE demos; Interregional transfer demos; documentation for Interaction lag demos; added examples 7 and 8 to Simple Java demos;
 Added property to add noise to data for Kraskov MI;
 Added derivation of Apache Commons Math code for chi square distribution, and included relevant notices in our release;

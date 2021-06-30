@@ -4,7 +4,7 @@ Python-based network analysis for time series.
 
 # Installation
 
-Requires Octave if using the integrated information measures.
+Requires Octave if using the integrated information statistics.
 
 ## Getting started
 
@@ -33,7 +33,7 @@ Association coefficients that assume the observations are paired but not necessa
 
 ### Independence criterion
 
-Measures that assume a certain model of paired observations (not necessarily time series) to be important in distinguishing independence or integration.
+statistics that assume a certain model of paired observations (not necessarily time series) to be important in distinguishing independence or integration.
 
 | Function | Description |
 | ----------- | ----------- |
@@ -47,9 +47,9 @@ Measures that assume a certain model of paired observations (not necessarily tim
 | `igci` | Information-geometric conditional independence |
 | `reci` | Neural correlation coefficient |
 
-### Discrete-time measures
+### Discrete-time statistics
 
-Measures that assume the temporal precendence in discrete-time time series are important in distinguishing independence or integration.
+statistics that assume the temporal precendence in discrete-time time series are important in distinguishing independence or integration.
 
 | Function | Description |
 | -------- | ----------- |
@@ -60,9 +60,9 @@ Measures that assume the temporal precendence in discrete-time time series are i
 | `mgc` | Multi-scale graph correlation for time series |
 | `dtw` | (Fast) dynamic time warping |
 
-### Spectral measures
+### Spectral statistics
 
-Measures that involve a Fourier or wavelet transformation prior to computing statistics.
+statistics that involve a Fourier or wavelet transformation prior to computing statistics.
 Each statistic is averaged over some frequency (and time, for wavelet transformations) range specified by the parameters (see below).
 
 | Function | Description |
@@ -87,9 +87,9 @@ Each statistic is averaged over some frequency (and time, for wavelet transforma
 | `ppc` | Pairwise-phase consistency |
 | `pec` | Power envelope correlation |
 
-### Information-theoretic measures
+### Information-theoretic statistics
 
-General bivariate information-theoretic measures that are computed with either a kernel or a Gaussian estimator.
+General bivariate information-theoretic statistics that are computed with either a kernel or a Gaussian estimator.
 
 | Function | Description |
 | -------- | ----------- |
@@ -121,17 +121,17 @@ The shorthand for each parameter (LHS of the table) is appended to the function 
 | `pvalue` | Outputs a p-value (for cointegration) |
 | `max_eig_stat` | Outputs the maximum eigenvalue (for cointegration) |
 | `trace_stat` | Outputs the trace of the matrix (for cointegration) |
-| `kernel_W-X` | Kernel estimator for information-theoretic measures with width of `X` (default: `0.5`) |
-| `kraskov_NN-X` | Kraskov-Strogaz-Grassberger estimator for mutual information-based measures with nearest-neighbours `X` (default: `4`) |
-| `gaussian` | Gaussian estimator for information-theoretic measures |
-| `kozachenko` | Kozachenko estimator for entropy-based measures |
+| `kernel_W-X` | Kernel estimator for information-theoretic statistics with width of `X` (default: `0.5`) |
+| `kraskov_NN-X` | Kraskov-Strogaz-Grassberger estimator for mutual information-based statistics with nearest-neighbours `X` (default: `4`) |
+| `gaussian` | Gaussian estimator for information-theoretic statistics |
+| `kozachenko` | Kozachenko estimator for entropy-based statistics |
 | `k-X` | History length of target process for transfer entropy/Granger causality (default: `1`) |
 | `kt-X` | Time delay of target process for transfer entropy/Granger causality (default: `1`) |
 | `l-X` | History length of source process for transfer entropy/Granger causality (default: `1`) |
 | `lt-X` | Time delay of source process for transfer entropy/Granger causality (default: `1`) |
-| `DCE` | Dynamic correlation exclusion (a.k.a Theiler Window) for information-theoretic measures (not yet suitable for Gaussian estimator) |
+| `DCE` | Dynamic correlation exclusion (a.k.a Theiler Window) for information-theoretic statistics (not yet suitable for Gaussian estimator) |
 | `fs-X` | Sampling frequency of `X` (default: `1`) |
-| `fmin-X` | Minimum frequency for averaging spectral/wavelet measures (default: `0`) |
-| `fmax-X` | Maximum frequency for averaging  spectral/wavelet measures (default: `nyquist = fs/2`) |
+| `fmin-X` | Minimum frequency for averaging spectral/wavelet statistics (default: `0`) |
+| `fmax-X` | Maximum frequency for averaging  spectral/wavelet statistics (default: `nyquist = fs/2`) |
 | `order-X` | AR Order for parametric spectral Granger causality, choose `None` for optimisation by BIC (default: `None`) |
-| `cwt` | Continuous wavelet transformation (for spectral measures) |
+| `cwt` | Continuous wavelet transformation (for spectral statistics) |

@@ -3,17 +3,17 @@ from pynats.data import Data
 import warnings, copy
 
 """
-Base class for pairwise dependency measurements.
+Base class for pairwise statistics.
 
 The child classes should either overload the adjacency method (if it computes the full adjacency)
-or the bivariate method if it computes only pairwise measurements
+or the bivariate method if it computes only pairwise statisticss
 """
 
 """
 Some parsing functions for decorating so that we can either input the processes directly or use the data structure
 """
-def parse_univariate(measure):
-    def parsed_measure(self,data,i=None,inplace=True):
+def parse_univariate(function):
+    def parsed_function(self,data,i=None,inplace=True):
         if not isinstance(data,Data):
             data1 = data
             data = Data(data=data1)
@@ -27,12 +27,12 @@ def parse_univariate(measure):
             else:
                 raise ValueError('Require argument i to be set.')
 
-        return measure(self,data,i=i)
+        return function(self,data,i=i)
 
-    return parsed_measure
+    return parsed_function
 
-def parse_bivariate(measure):
-    def parsed_measure(self,data,data2=None,i=None,j=None,inplace=True):
+def parse_bivariate(function):
+    def parsed_function(self,data,data2=None,i=None,j=None,inplace=True):
         if not isinstance(data,Data):
             if data2 is None:
                 raise TypeError('Input must be either a pynats.data object or two 1D-array inputs.'
@@ -51,12 +51,12 @@ def parse_bivariate(measure):
             else:
                 Warning('i and j not set.')
 
-        return measure(self,data,i=i,j=j)
+        return function(self,data,i=i,j=j)
 
-    return parsed_measure
+    return parsed_function
 
-def parse_multivariate(measure):
-    def parsed_measure(self,data,inplace=True):
+def parse_multivariate(function):
+    def parsed_function(self,data,inplace=True):
         if not isinstance(data,Data):
             # Create a pynats.Data object from iterable data object
             try:
@@ -70,12 +70,12 @@ def parse_multivariate(measure):
             # Ensure we don't write over the original
             data = copy.deepcopy(data)
 
-        return measure(self,data)
+        return function(self,data)
 
-    return parsed_measure
+    return parsed_function
 
 class directed:
-    """ Directed measures
+    """ Directed statistics
     """
 
     humanname = 'Bivariate base class'
@@ -90,7 +90,7 @@ class directed:
 
     @parse_multivariate
     def adjacency(self,data):
-        """ Compute the dependency measures for the entire multivariate dataset
+        """ Compute the dependency statistics for the entire multivariate dataset
         """
         A = np.empty((data.n_processes,data.n_processes))
         A[:] = np.NaN

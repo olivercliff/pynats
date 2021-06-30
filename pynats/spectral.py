@@ -1,5 +1,5 @@
 import numpy as np
-import spectral_connectivity as sc # For directed spectral measures (excl. spectral GC) 
+import spectral_connectivity as sc # For directed spectral statistics (excl. spectral GC) 
 from pynats.base import directed, parse_bivariate, undirected, parse_multivariate, unsigned
 import nitime.analysis as nta
 import nitime.timeseries as ts
@@ -8,7 +8,7 @@ from mne.connectivity import envelope_correlation as pec
 import warnings
 
 """
-    - Most measures come from the Eden-Kramer Lab's spectral_connectivity toolkit
+    - Most statistics come from the Eden-Kramer Lab's spectral_connectivity toolkit
     - parametric Spectral GC comes from nitime. [The VAR model could be computed from those in the infotheory module but this involves pretty intense integration so may not ever get done.]
     - non-parametric Spectral GC still comes from EK lab
 """
@@ -50,7 +50,7 @@ class kramer(unsigned):
         except AttributeError:
             raise AttributeError(f'Include measure for {self.humanname}')
 
-    def _get_measure(self,C):
+    def _get_statistic(self,C):
         raise NotImplementedError
 
 class kramer_mv(kramer):
@@ -66,7 +66,7 @@ class kramer_mv(kramer):
             try:
                 res = getattr(conn,self.measure)()
             except TypeError:
-                res = self._get_measure(conn)
+                res = self._get_statistic(conn)
 
             freq = conn.frequencies
             try:
@@ -105,7 +105,7 @@ class kramer_bv(kramer):
             try:
                 res = getattr(conn,self.measure)()
             except TypeError:
-                res = self._get_measure(conn)
+                res = self._get_statistic(conn)
 
             freq = conn.frequencies
             try:
@@ -263,7 +263,7 @@ class phase_slope_index(kramer_mv,directed):
         super().__init__(**kwargs)
         self._measure = 'phase_slope_index'
     
-    def _get_measure(self,C):
+    def _get_statistic(self,C):
         return C.phase_slope_index(frequencies_of_interest=[self._fmin,self._fmax],
                                     frequency_resolution=(self._fmax-self._fmin)/50)
 
@@ -276,7 +276,7 @@ class group_delay(kramer_mv,directed):
         super().__init__(**kwargs)
         self._measure = 'group_delay'
     
-    def _get_measure(self,C):
+    def _get_statistic(self,C):
         return C.group_delay(frequencies_of_interest=[self._fmin,self._fmax],
                             frequency_resolution=(self._fmax-self._fmin)/50)
 
