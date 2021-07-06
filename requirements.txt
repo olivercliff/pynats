@@ -1,5 +1,5 @@
 pytest
-scikit-learn>=0.24.1
+scikit-learn>=0.23.2
 scipy>=1.5.0
 numpy==1.19.5
 statsmodels>=0.12.0
