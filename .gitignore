@@ -1,6 +1,5 @@
 pynats.egg-info
 pynats/__pycache__
-demos/data
 build
 dist
 test/__pycache__
