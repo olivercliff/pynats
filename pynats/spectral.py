@@ -280,39 +280,38 @@ class group_delay(kramer_mv,directed):
         return C.group_delay(frequencies_of_interest=[self._fmin,self._fmax],
                             frequency_resolution=(self._fmax-self._fmin)/50)
 
-class partial_coherence(undirected,unsigned):
-    humanname = 'Partial coherence'
-    name = 'pcoh'
-    labels = ['unsigned','spectral','directed']
+# class partial_coherence(undirected,unsigned):
+#     humanname = 'Partial coherence'
+#     name = 'pcoh'
+#     labels = ['unsigned','spectral','directed']
 
-    def __init__(self,fs=1,fmin=0.05,fmax=np.pi/2,statistic='mean'):
-        self._TR = 1/fs # Not yet implemented
-        self._fmin = fmin
-        self._fmax = fmax
-        if statistic == 'mean':
-            self._statfn = np.mean
-        elif statistic == 'max':
-            self._statfn = np.max
-        else:
-            raise NameError(f'Unknown statistic {statistic}')
-        paramstr = f'_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}'.replace('.','-')
-        self.name = self.name + paramstr
+#     def __init__(self,fs=1,fmin=0.05,fmax=np.pi/2,statistic='mean'):
+#         self._TR = 1/fs # Not yet implemented
+#         self._fmin = fmin
+#         self._fmax = fmax
+#         if statistic == 'mean':
+#             self._statfn = np.mean
+#         elif statistic == 'max':
+#             self._statfn = np.max
+#         else:
+#             raise NameError(f'Unknown statistic {statistic}')
+#         paramstr = f'_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}'.replace('.','-')
+#         self.name = self.name + paramstr
 
-    @parse_multivariate
-    def adjacency(self,data):        
-        # This should be changed to conditioning on all, rather than averaging all conditionals
+#     @parse_multivariate
+#     def adjacency(self,data):        
+#         # This should be changed to conditioning on all, rather than averaging all conditionals
+#         if not hasattr(data,'pcoh'):
+#             z = np.squeeze(data.to_numpy())
+#             pdata = tsu.percent_change(z)
+#             time_series = ts.TimeSeries(pdata, sampling_interval=1)
+#             C1 = nta.CoherenceAnalyzer(time_series)
+#             data.pcoh = {'gamma': np.nanmean(C1.coherence_partial,axis=2), 'freq': C1.frequencies}
 
-        if not hasattr(data,'pcoh'):
-            z = np.squeeze(data.to_numpy())
-            pdata = tsu.percent_change(z)
-            time_series = ts.TimeSeries(pdata, sampling_interval=1)
-            C1 = nta.CoherenceAnalyzer(time_series)
-            data.pcoh = {'gamma': np.nanmean(C1.coherence_partial,axis=2), 'freq': C1.frequencies}
-
-        freq_idx_C = np.where((data.pcoh['freq'] > self._fmin) * (data.pcoh['freq'] < self._fmax))[0]
-        pcoh = self._statfn(data.pcoh['gamma'][:, :, freq_idx_C], -1)
-        np.fill_diagonal(pcoh,np.nan)
-        return pcoh
+#         freq_idx_C = np.where((data.pcoh['freq'] > self._fmin) * (data.pcoh['freq'] < self._fmax))[0]
+#         pcoh = self._statfn(data.pcoh['gamma'][:, :, freq_idx_C], -1)
+#         np.fill_diagonal(pcoh,np.nan)
+#         return pcoh
 
 class spectral_granger(kramer_mv,directed,unsigned):
     humanname = 'Spectral Granger causality'

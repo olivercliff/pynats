@@ -4,93 +4,101 @@ channels:
 dependencies:
   - _libgcc_mutex=0.1=main
   - _openmp_mutex=4.5=1_gnu
-  - blas=1.0=mkl
   - ca-certificates=2021.5.25=h06a4308_1
-  - certifi=2021.5.30=py38h06a4308_0
-  - cycler=0.10.0=py38_0
-  - dbus=1.13.18=hb2f20db_0
-  - expat=2.4.1=h2531618_2
-  - fontconfig=2.13.1=h6c09931_0
-  - freetype=2.10.4=h5ab3b9f_0
-  - glib=2.68.2=h36276a3_0
-  - gst-plugins-base=1.14.0=h8213a91_2
-  - gstreamer=1.14.0=h28cd5cc_2
-  - icu=58.2=he6710b0_3
-  - intel-openmp=2021.2.0=h06a4308_610
-  - jpeg=9b=h024ee3a_2
-  - kiwisolver=1.3.1=py38h2531618_0
-  - lcms2=2.12=h3be6417_0
-  - ld_impl_linux-64=2.35.1=h7274673_9
-  - libffi=3.3=he6710b0_2
+  - certifi=2021.5.30=py36h06a4308_0
+  - libedit=3.1.20210216=h27cfd23_1
+  - libffi=3.2.1=hf484d3e_1007
   - libgcc-ng=9.3.0=h5101ec6_17
-  - libgfortran-ng=7.5.0=ha8ba4b0_17
-  - libgfortran4=7.5.0=ha8ba4b0_17
   - libgomp=9.3.0=h5101ec6_17
-  - libpng=1.6.37=hbc83047_0
   - libstdcxx-ng=9.3.0=hd4cf53a_17
-  - libtiff=4.2.0=h85742a9_0
-  - libuuid=1.0.3=h1bed415_2
-  - libwebp-base=1.2.0=h27cfd23_0
-  - libxcb=1.14=h7b6447c_0
-  - libxml2=2.9.12=h03d6c58_0
-  - lz4-c=1.9.3=h2531618_0
-  - matplotlib=3.3.4=py38h06a4308_0
-  - matplotlib-base=3.3.4=py38h62a2d02_0
-  - mkl=2021.2.0=h06a4308_296
-  - mkl-service=2.3.0=py38h27cfd23_1
-  - mkl_fft=1.3.0=py38h42c9631_2
-  - mkl_random=1.2.1=py38ha9443f7_2
   - ncurses=6.2=he6710b0_1
-  - numpy-base=1.20.2=py38hfae3a4d_0
-  - olefile=0.46=py_0
   - openssl=1.1.1k=h27cfd23_0
-  - pcre=8.45=h295c915_0
-  - pillow=8.2.0=py38he98fc37_0
-  - pip=21.1.2=py38h06a4308_0
-  - pyparsing=2.4.7=pyhd3eb1b0_0
-  - pyqt=5.9.2=py38h05f1152_4
-  - python=3.8.2=hcff3b4d_14
-  - python-dateutil=2.8.1=pyhd3eb1b0_0
-  - pytz=2021.1=pyhd3eb1b0_0
-  - qt=5.9.7=h5867ecd_1
-  - readline=8.1=h27cfd23_0
-  - seaborn=0.11.1=pyhd3eb1b0_0
-  - setuptools=52.0.0=py38h06a4308_0
-  - sip=4.19.13=py38he6710b0_0
-  - six=1.16.0=pyhd3eb1b0_0
-  - sqlite=3.36.0=hc218d9a_0
+  - pip=21.1.3=py36h06a4308_0
+  - python=3.6.7=h0371630_0
+  - readline=7.0=h7b6447c_5
+  - setuptools=52.0.0=py36h06a4308_0
+  - sqlite=3.33.0=h62c20be_0
   - tk=8.6.10=hbc83047_0
-  - tornado=6.1=py38h27cfd23_0
   - wheel=0.36.2=pyhd3eb1b0_0
   - xz=5.2.5=h7b6447c_0
   - zlib=1.2.11=h7b6447c_3
-  - zstd=1.4.9=haebb681_0
   - pip:
     - attrs==21.2.0
+    - backcall==0.2.0
     - cdt==0.5.23
     - chardet==4.0.0
+    - cycler==0.10.0
+    - cython==0.29.23
+    - dataclasses==0.8
+    - decorator==4.4.2
     - dill==0.3.4
     - dtw-python==1.1.10
+    - gputil==1.4.0
     - hyppo==0.2.1
     - idna==2.10
+    - importlib-metadata==4.6.1
+    - iniconfig==1.1.1
+    - ipykernel==5.5.5
+    - ipython==7.16.1
+    - ipython-genutils==0.2.0
+    - jedi==0.18.0
     - joblib==1.0.1
     - jpype1==1.3.0
+    - jupyter-client==6.1.12
+    - jupyter-core==4.7.1
+    - kiwisolver==1.3.1
+    - llvmlite==0.36.0
+    - matplotlib==3.3.4
     - metakernel==0.27.5
     - mne==0.23.0
+    - networkx==2.5.1
+    - nibabel==3.2.1
     - nitime==0.9
-    - numpy==1.20.1
+    - numba==0.53.1
+    - numpy==1.19.5
     - oct2py==5.2.0
     - octave-kernel==0.32.0
-    - packaging==20.9
-    - pandas==1.2.5
+    - packaging==21.0
+    - pandas==1.1.5
+    - parso==0.8.2
+    - patsy==0.5.1
+    - pexpect==4.8.0
+    - pickleshare==0.7.5
+    - pillow==8.3.0
+    - pluggy==0.13.1
+    - prompt-toolkit==3.0.19
+    - ptyprocess==0.7.0
+    - py==1.10.0
+    - pybind11==2.6.2
+    - pyedm==1.9.0.0
     - pygments==2.9.0
+    - pynndescent==0.5.3
+    - pyparsing==2.4.7
+    - pytest==6.2.4
+    - python-dateutil==2.8.1
+    - pytz==2021.1
     - pyyaml==5.4.1
+    - pyzmq==22.1.0
     - requests==2.25.1
     - scikit-learn==0.24.2
-    - scipy==1.7.0
+    - scipy==1.5.4
+    - seaborn==0.11.0
+    - six==1.16.0
+    - skrebate==0.62
+    - sktime==0.4.3
+    - spectral-connectivity==0.2.5.dev0
     - statsmodels==0.12.2
     - threadpoolctl==2.1.0
+    - toml==0.10.2
+    - torch==1.9.0
+    - tornado==6.1
     - tqdm==4.61.1
+    - traitlets==4.3.3
     - tslearn==0.5.1.0
+    - typing-extensions==3.10.0.0
+    - umap-learn==0.5.1
     - urllib3==1.26.6
-prefix: /home/oliver/.conda/envs/pynats
+    - wcwidth==0.2.5
+    - xarray==0.16.2
+    - zipp==3.5.0
+prefix: /home/oliver/miniconda3/envs/pynats

@@ -677,26 +677,26 @@
     - fmin: 0.25
       fmax: 0.5
       statistic: max
+      
+  # partial_coherence:
+  #   - fs: 1
 
-  partial_coherence:
-    - fs: 1
+  #   - fmin: 0
+  #     fmax: 0.25
 
-    - fmin: 0
-      fmax: 0.25
+  #   - fmin: 0.25
+  #     fmax: 0.5
 
-    - fmin: 0.25
-      fmax: 0.5
+  #   - fs: 1
+  #     statistic: max
 
-    - fs: 1
-      statistic: max
+  #   - fmin: 0
+  #     fmax: 0.25
+  #     statistic: max
 
-    - fmin: 0
-      fmax: 0.25
-      statistic: max
-
-    - fmin: 0.25
-      fmax: 0.5
-      statistic: max
+  #   - fmin: 0.25
+  #     fmax: 0.5
+  #     statistic: max
 
   directed_coherence:
     - fs: 1

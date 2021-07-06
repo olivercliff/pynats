@@ -22,27 +22,27 @@ class Calculator():
 
         self._load_yaml(configfile)
 
-        duplicates = [name for name, count in Counter(self._measure_names).items() if count > 1]
+        duplicates = [name for name, count in Counter(self._statnames).items() if count > 1]
         if len(duplicates) > 0:
-            raise ValueError(f'Duplicate measure identifiers: {duplicates}.\n Check the config file for duplicates.')
+            raise ValueError(f'Duplicate statistic identifiers: {duplicates}.\n Check the config file for duplicates.')
 
-        self._nmeasures = len(self._measures)
+        self._nstatistics = len(self._statistics)
         self._nclasses = len(self._classes)
-        self._proctimes = np.empty(self._nmeasures)
+        self._proctimes = np.empty(self._nstatistics)
         self._name = name
         self._labels = labels
 
-        print("Number of bivariate statistics: {}".format(self._nmeasures))
+        print("Number of bivariate statistics: {}".format(self._nstatistics))
 
         if dataset is not None:
             self.load_dataset(dataset)
 
     @property
-    def n_measures(self):
-        return self._nmeasures
+    def n_statistics(self):
+        return self._nstatistics
 
-    @n_measures.setter
-    def n_measures(self,n):
+    @n_statistics.setter
+    def n_statistics(self,n):
         raise Exception('Do not set this property externally.')
 
     @property
@@ -106,8 +106,8 @@ class Calculator():
         self._classes = []
         self._class_names = []
 
-        self._measures = []
-        self._measure_names = []
+        self._statistics = []
+        self._statnames = []
 
         with open(document) as f:
             yf = yaml.load(f,Loader=yaml.FullLoader)
@@ -125,27 +125,27 @@ class Calculator():
                     self._class_names.append(class_name)
                     if paramlist is not None:
                         for params in paramlist:
-                            print(f'[{len(self._measures)}] Adding measure {module_name}.{class_name}(x,y,{params})...')
-                            self._measures.append(self._classes[-1](**params))
-                            self._measure_names.append(self._measures[-1].name)
-                            print('Succesfully initialised with identifier "{}"'.format(self._measures[-1].name))
+                            print(f'[{len(self._statistics)}] Adding statistic {module_name}.{class_name}(x,y,{params})...')
+                            self._statistics.append(self._classes[-1](**params))
+                            self._statnames.append(self._statistics[-1].name)
+                            print('Succesfully initialised with identifier "{}"'.format(self._statistics[-1].name))
                     else:
-                        print(f'[{len(self._measures)}] Adding measure {module_name}.{class_name}(x,y)...')
-                        self._measures.append(self._classes[-1]())
-                        self._measure_names.append(self._measures[-1].name)
-                        print('Succesfully initialised with identifier "{}"'.format(self._measures[-1].name))
+                        print(f'[{len(self._statistics)}] Adding statistic {module_name}.{class_name}(x,y)...')
+                        self._statistics.append(self._classes[-1]())
+                        self._statnames.append(self._statistics[-1].name)
+                        print('Succesfully initialised with identifier "{}"'.format(self._statistics[-1].name))
 
     def load_dataset(self,dataset):
         if not isinstance(dataset,Data):
             self._dataset = Data(Data.convert_to_numpy(dataset))
         else:
             self._dataset = dataset
-        self._adjacency = np.full((self._nmeasures,
+        self._adjacency = np.full((self._nstatistics,
                                     self.dataset.n_processes,
                                     self.dataset.n_processes), np.NaN)
 
     def compute(self,replication=None):
-        """ Compute the dependency measures for all target processes for a given replication
+        """ Compute the dependency statistics for all target processes for a given replication
         """
         if not hasattr(self,'_dataset'):
             raise AttributeError('Dataset not loaded yet. Please initialise with load_dataset.')
@@ -153,26 +153,26 @@ class Calculator():
         if replication is None:
             replication = 0
 
-        pbar = tqdm(range(self._nmeasures))
+        pbar = tqdm(range(self._nstatistics))
         for m in pbar:
-            pbar.set_description(f'Processing [{self._name}: {self._measure_names[m]}]')
+            pbar.set_description(f'Processing [{self._name}: {self._statnames[m]}]')
             start_time = time.time()
             try:
-                self._adjacency[m] = self._measures[m].adjacency(self.dataset)
+                self._adjacency[m] = self._statistics[m].adjacency(self.dataset)
             except Exception as err:
-                warnings.warn(f'Caught {type(err)} for measure "{self._measure_names[m]}": {err}')
+                warnings.warn(f'Caught {type(err)} for statistic "{self._statnames[m]}": {err}')
                 self._adjacency[m] = np.NaN
             self._proctimes[m] = time.time() - start_time
         pbar.close()
 
     def prune(self,meas_nans=0.2,proc_nans=0.8):
-        """Prune the bad processes/measures
+        """Prune the bad processes/statistics
         """
-        print(f'Pruning:\n\t- Measures with more than {100*meas_nans}% bad values'
+        print(f'Pruning:\n\t- statistics with more than {100*meas_nans}% bad values'
                 f', and\n\t- Processes with more than {100*proc_nans}% bad values')
 
         # First, iterate through the time-series and remove any that have NaN's > ts_nans
-        M = self._nmeasures * (2*(self._dataset.n_processes-1))
+        M = self._nstatistics * (2*(self._dataset.n_processes-1))
         threshold = M * proc_nans
         rm_list = []
         for proc in range(self._dataset.n_processes):
@@ -195,13 +195,13 @@ class Calculator():
         self._adjacency = np.delete(self._adjacency,rm_list,axis=1)
         self._adjacency = np.delete(self._adjacency,rm_list,axis=2)
 
-        # Then, iterate through the measures and remove any that have NaN's > meas_nans
+        # Then, iterate through the statistics and remove any that have NaN's > meas_nans
         M = self._dataset.n_processes ** 2 - self._dataset.n_processes
         threshold = M * meas_nans
         il = np.tril_indices(self._dataset.n_processes,-1)
 
         rm_list = []
-        for meas in range(self._nmeasures):
+        for meas in range(self._nstatistics):
 
             flat_adj = self._adjacency[meas,il[1],il[0]].reshape((M//2,1))
             flat_adj = np.concatenate((flat_adj,
@@ -210,31 +210,31 @@ class Calculator():
             # Ensure normalisation, etc., can happen
             if not np.isfinite(flat_adj.sum()):
                 rm_list.append(meas)
-                print(f'Measure "[{meas}] {self._measure_names[meas]}" has non-finite sum. Removing.')
+                print(f'Statistic "[{meas}] {self._statnames[meas]}" has non-finite sum. Removing.')
                 continue
 
             nzs = np.size(flat_adj) - np.count_nonzero(np.isfinite(flat_adj))
             if nzs > threshold:
                 rm_list.append(meas)
-                print(f'Removing measure "[{meas}] {self._measure_names[meas]}" with {nzs} ({100*nzs/M:.1f}%) '
+                print(f'Removing statistic "[{meas}] {self._statnames[meas]}" with {nzs} ({100*nzs/M:.1f}%) '
                         f'NaNs (max is {threshold} [{100*meas_nans}%])')
 
-        # Remove the measure from the adjacency and process times matrix
+        # Remove the statistic from the adjacency and process times matrix
         self._adjacency = np.delete(self._adjacency,rm_list,axis=0)
         self._proctimes = np.delete(self._proctimes,rm_list,axis=0)
 
-        # Remove from the measure lists (move to a method and protect measure)
-        for meas in sorted(rm_list,reverse=True):
-            del self._measures[meas]
-            del self._measure_names[meas]
+        # Remove from the statistic lists (move to a method and protect statistic)
+        for s in sorted(rm_list,reverse=True):
+            del self._statistics[s]
+            del self._statnames[s]
 
-        self._nmeasures = len(self._measures)
-        print('Number of statistics after pruning: {}'.format(self._nmeasures))
+        self._nstatistics = len(self._statistics)
+        print('Number of statistics after pruning: {}'.format(self._nstatistics))
 
     def debias(self):
-        """ Iterate through all measures and zero the unsigned measures (fixes absolute value errors when correlating)
+        """ Iterate through all statistics and zero the unsigned statistics (fixes absolute value errors when correlating)
         """
-        for adj, m in zip(self._adjacency,self._measures):
+        for adj, m in zip(self._adjacency,self._statistics):
             if not m.issigned():
                 adj -= np.nanmin(adj)
 
@@ -257,7 +257,7 @@ class Calculator():
         matches = [set(cls).issubset(labset) for cls in classes]
 
         if np.count_nonzero(matches) > 1:
-            logger.warning(f'More than one match for classes {classes}')
+            warnings.warn(f'More than one match for classes {classes}')
         else:
             try:
                 id = np.where(matches)[0][0]
@@ -279,14 +279,14 @@ class Calculator():
                 raise TypeError(f'Attribute {attr} does not match between calculators ({selfattr} != {otherattr})')
 
     def flatten(self,transformer=None):
-        """ Gives a measure-by-edges matrix for correlations, etc.
+        """ Gives a statistic-by-edges matrix for correlations, etc.
         """
         M = self.dataset.n_processes
         n_edges = M*(M-1)
 
         il = np.tril_indices(M,-1)
 
-        flatmat = np.empty((n_edges,self.n_measures))
+        flatmat = np.empty((n_edges,self.n_statistics))
         for f, adj in enumerate(self.adjacency):
             flatmat[:-1:2,f] = adj[il[1],il[0]]
             flatmat[1::2,f] = adj[il[0],il[1]]
@@ -301,37 +301,37 @@ class Calculator():
         edges[:-1:2] = [f'{i}->{j}' for i, j in zip(*il)]
         edges[1::2] = [f'{j}->{i}' for i, j in zip(*il)]
 
-        df = pd.DataFrame(flatmat, index=edges, columns=self._measure_names)
+        df = pd.DataFrame(flatmat, index=edges, columns=self._statnames)
         df.columns.name = 'Bivariate statistic'
         df.index.name = 'Edges'
         return df
 
-    def get_measure_labels(self):
-        return { m.name : m.labels for m in self._measures }
+    def getstatlabels(self):
+        return { s.name : s.labels for s in self._statistics }
 
-    def get_correlation_df(self,with_labels=False,debias=False,which_measure=['spearman'],flatten_kwargs={}):
-        # Sorts out pesky numerical issues in the unsigned measures
+    def get_correlation_df(self,with_labels=False,debias=False,which_stat=['spearman'],flatten_kwargs={}):
+        # Sorts out pesky numerical issues in the unsigned statistics
         if debias:
             self.debias()
 
-        # Flatten (get edge-by-measure matrix)
+        # Flatten (get edge-by-statistic matrix)
         edges = self.flatten(**flatten_kwargs).abs()
 
         # Correlate the edge matrix (using pearson and/or spearman correlation)
         mdf = pd.DataFrame()
-        if 'pearson' in which_measure:
+        if 'pearson' in which_stat:
             pmat = edges.corr(method='pearson')
-            pmat.index = pd.MultiIndex.from_tuples([('pearson',m) for m in pmat.index],names=['Type','Source measure'])
-            pmat.columns.name = 'Target measure'
+            pmat.index = pd.MultiIndex.from_tuples([('pearson',m) for m in pmat.index],names=['Type','Source statistic'])
+            pmat.columns.name = 'Target statistic'
             mdf = pmat
-        if 'spearman' in which_measure:
+        if 'spearman' in which_stat:
             spmat = edges.corr(method='spearman')
-            spmat.index = pd.MultiIndex.from_tuples([('spearman',m) for m in spmat.index],names=['Type','Source measure'])
-            spmat.columns.name = 'Target measure'
+            spmat.index = pd.MultiIndex.from_tuples([('spearman',m) for m in spmat.index],names=['Type','Source statistic'])
+            spmat.columns.name = 'Target statistic'
             mdf = mdf.append(spmat)
 
         if with_labels:
-            return mdf, self.get_measure_labels()
+            return mdf, self.getstatlabels()
         else:
             return mdf
     
@@ -540,7 +540,7 @@ class CorrelationFrame():
         if cf is not None:
             if isinstance(cf,CalculatorFrame) or isinstance(cf,Calculator):
                 cf = CalculatorFrame(cf)
-                # Store the measure-focused dataframe, measure labels, and dataset labels
+                # Store the statistic-focused dataframe, statistic labels, and dataset labels
                 self._mdf, self._mlabels, self._dlabels = cf.get_correlation_df(with_labels=True,flatten_kwargs=flatten_kwargs,**kwargs)
                 self._name = cf.name
             else:
@@ -572,7 +572,7 @@ class CorrelationFrame():
         return self.ddf.shape[1]
 
     @property
-    def n_measures(self):
+    def n_statistics(self):
         return self.mdf.shape[1]
 
     @property
@@ -607,12 +607,16 @@ class CorrelationFrame():
         # Make sure to re-run this otherwise we'll have the old one
         self._ddf = convert_mdf_to_ddf(self.mdf)
 
-    def get_feature_matrix(self,mthresh=0.8,dthresh=0.8):
-        if not hasattr(self,'_fm'):
-            self._fm = self.ddf.drop_duplicates()
-            self._fm = self._fm.dropna(axis=0,thresh=mthresh*self._fm.shape[1])
-            self._fm = self._fm.dropna(axis=1,thresh=dthresh*self._fm.shape[0])
-        return self._fm
+    def get_feature_matrix(self,mthresh=0.8,dthresh=0.2):
+        fm = self.ddf.drop_duplicates()
+        # Drop datasets that are mostly NaNs
+        nnd = dthresh*fm.shape[0]
+        fm = fm.dropna(axis=1,thresh=nnd)
+
+        # Drop measures that are mostly NaNs
+        nnm = mthresh*fm.shape[1]
+        fm = fm.dropna(axis=0,thresh=nnm)
+        return fm
 
     @staticmethod
     def _verify_classes(classes):
@@ -628,25 +632,26 @@ class CorrelationFrame():
                 assert not set(i_cls).issubset(set(j_cls)), (f'Class {i_cls} is a subset of class {j_cls}.')
 
     @staticmethod
-    def _get_group(labels,classes):
+    def _get_group(labels,classes,instance):
         labset = set(labels)
         matches = [set(cls).issubset(labset) for cls in classes]
 
         # Iterate through all 
         if np.count_nonzero(matches) > 1:
-            logger.warning(f'More than one match for classes {classes}')
-        else:
-            try:
-                myid = np.where(matches)[0][0]
-                return myid
-            except (TypeError,IndexError):
-                return -1
+            warnings.warn(f'More than one match in for {instance} (whilst searching for {classes} within {labels}). Choosing first one.')
+        
+        try:
+            myid = np.where(matches)[0][0]
+            return myid
+        except (TypeError,IndexError):
+            print(f'{instance} has no match in {classes}.')
+            return -1
 
     @staticmethod
     def _set_groups(classes,labels,group_names,group):
         CorrelationFrame._verify_classes(classes)
         for m in labels:
-            group[m] = CorrelationFrame._get_group(labels[m],classes)
+            group[m] = CorrelationFrame._get_group(labels[m],classes,m)
 
     def set_mgroups(self,classes):
         # Initialise the classes
