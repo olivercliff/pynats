@@ -17,10 +17,10 @@ class covariance_estimators(undirected,signed):
         paramstr = f'_{estimator}'
         if squared:
             paramstr = '-sq' + paramstr
-            self.labels += ['unsigned']
+            self.labels = covariance_estimators.labels + ['unsigned']
             self.issigned = lambda : False
         else:
-            self.labels += ['signed']
+            self.labels = covariance_estimators.labels + ['signed']
         self.name = self.name + paramstr
         self._squared = squared
         self._estimator = estimator
@@ -74,7 +74,7 @@ class precision(covariance_estimators):
 class xcorr(undirected,signed):
 
     humanname = "Cross correlation"
-    labels = ['basic','lagged','linear','undirected']
+    labels = ['basic','linear','undirected','temporal']
 
     def __init__(self,squared=False,statistic='max',sigonly=True):
         self.name = 'xcorr'
@@ -85,9 +85,9 @@ class xcorr(undirected,signed):
         if self._squared:
             self.issigned = lambda : False
             self.name = self.name + '-sq'
-            self.labels += ['unsigned']
+            self.labels = xcorr.labels + ['unsigned']
         else:
-            self.labels += ['signed']
+            self.labels = xcorr.labels + ['signed']
         self.name += f'_{statistic}_sig-{sigonly}'
     
     @parse_bivariate

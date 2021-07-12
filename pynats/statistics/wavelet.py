@@ -105,7 +105,7 @@ class icoherence(mne,undirected):
         self._measure = 'imcoh'
         super().__init__(**kwargs)
 
-class phase_locking_value(mne,undirected):
+class phase_locking_value(mne,directed):
     humanname = 'Phase locking value (wavelet)'
     labels = ['unsigned','wavelet','undirected']
 
@@ -161,7 +161,7 @@ class debiased_weighted_squared_phase_lag_index(mne,undirected):
 
 class phase_slope_index(mne,directed):
     humanname = 'Phase slope index (wavelet)'
-    labels = ['unsigned','wavelet','undirected']
+    labels = ['unsigned','wavelet','directed']
 
     def __init__(self,**kwargs):
         self.name = 'psi'

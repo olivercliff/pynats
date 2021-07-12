@@ -12,7 +12,7 @@ import logging
 Contains relevant dependence statistics from the information theory community.
 """
 if not jp.isJVMStarted():
-    jarloc = os.path.dirname(os.path.abspath(__file__)) + '/lib/jidt/infodynamics.jar'
+    jarloc = os.path.dirname(os.path.abspath(__file__)) + '/../lib/jidt/infodynamics.jar'
     # Change to debug info
     logging.debug(f'Starting JVM with java class {jarloc}.')
     jp.startJVM(jp.getDefaultJVMPath(), '-ea', '-Djava.class.path=' + jarloc)
@@ -275,7 +275,7 @@ class mutual_info(jidt_base,undirected):
 class time_lagged_mutual_info(mutual_info):
     humanname = "Time-lagged mutual information"
     name = 'tlmi'
-    labels = ['unsigned','infotheory','temporal','lagged','undirected']
+    labels = ['unsigned','infotheory','temporal','undirected']
 
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
@@ -306,7 +306,7 @@ class transfer_entropy(jidt_base,directed):
 
     humanname = "Transfer entropy"
     name = 'te'
-    labels = ['unsigned','embedding','infotheory','temporal','lagged','directed']
+    labels = ['unsigned','infotheory','temporal','directed']
 
     def __init__(self,auto_embed_method=None,k_search_max=None,tau_search_max=None,
                         k_history=1,k_tau=1,l_history=1,l_tau=1,**kwargs):
@@ -403,7 +403,7 @@ class causal_entropy(jidt_base,directed):
 
     humanname = 'Causally conditioned entropy'
     name = 'cce'
-    labels = ['unsigned','infotheory','temporal','lagged','directed']
+    labels = ['unsigned','infotheory','temporal','directed']
 
     def __init__(self,n=5,**kwargs):
         super().__init__(**kwargs)
@@ -445,7 +445,7 @@ class directed_info(causal_entropy,directed):
 
     humanname = 'Directed information'
     name = 'di'
-    labels = ['unsigned','infotheory','temporal','lagged','directed']
+    labels = ['unsigned','infotheory','temporal','directed']
 
     def __init__(self,n=10,**kwargs):
         super().__init__(**kwargs)
@@ -488,7 +488,7 @@ class integrated_information(undirected,unsigned):
     
     humanname = "Integrated information"
     name = "phi"
-    labels = ['unsigned','infotheory','temporal','undirected']
+    labels = ['linear','unsigned','infotheory','temporal','undirected']
 
     def __init__(self,phitype='star',delay=1,normalization=0):
         self._params = Struct()
@@ -503,7 +503,7 @@ class integrated_information(undirected,unsigned):
     def bivariate(self,data,i=None,j=None,verbose=False):
         
         if not octave.exist('phi_comp'):
-            path = os.path.dirname(os.path.abspath(__file__)) + '/lib/PhiToolbox/'
+            path = os.path.dirname(os.path.abspath(__file__)) + '/../lib/PhiToolbox/'
             octave.addpath(octave.genpath(path))
 
         P = [1, 2]

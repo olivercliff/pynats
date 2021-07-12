@@ -10,8 +10,6 @@ import seaborn as sns
 data = Data.load_dataset('forex')
 calc = Calculator(dataset=data)
 
-calc.compute()
-
 corrmat = calc.flatten().corr(method='spearman').dropna(axis=0,how='all').dropna(axis=1,how='all')
 print(f'Number of statistics left after pruning: {corrmat.shape[0]}')
 

@@ -533,7 +533,7 @@ class CalculatorFrame():
 class CorrelationFrame():
 
     def __init__(self,cf=None,flatten_kwargs={},**kwargs):
-        self._mlabels = {}
+        self._slabels = {}
         self._dlabels = {}
         self._mdf = pd.DataFrame()
         
@@ -541,7 +541,7 @@ class CorrelationFrame():
             if isinstance(cf,CalculatorFrame) or isinstance(cf,Calculator):
                 cf = CalculatorFrame(cf)
                 # Store the statistic-focused dataframe, statistic labels, and dataset labels
-                self._mdf, self._mlabels, self._dlabels = cf.get_correlation_df(with_labels=True,flatten_kwargs=flatten_kwargs,**kwargs)
+                self._mdf, self._slabels, self._dlabels = cf.get_correlation_df(with_labels=True,flatten_kwargs=flatten_kwargs,**kwargs)
                 self._name = cf.name
             else:
                 self.merge(cf)
@@ -577,7 +577,7 @@ class CorrelationFrame():
 
     @property
     def mlabels(self):
-        return self._mlabels
+        return self._slabels
 
     @property
     def dlabels(self):
@@ -598,10 +598,10 @@ class CorrelationFrame():
     def merge(self,other):
         self._mdf = self._mdf.append(other.mdf)
         try:
-            self._mlabels = self._mlabels | other.mlabels
+            self._slabels = self._slabels | other.mlabels
             self._dlabels = self._dlabels | other.dlabels
         except TypeError:
-            self._mlabels.update(other.mlabels)
+            self._slabels.update(other.mlabels)
             self._dlabels.update(other.dlabels)
 
         # Make sure to re-run this otherwise we'll have the old one
@@ -609,6 +609,7 @@ class CorrelationFrame():
 
     def get_feature_matrix(self,mthresh=0.8,dthresh=0.2):
         fm = self.ddf.drop_duplicates()
+            
         # Drop datasets that are mostly NaNs
         nnd = dthresh*fm.shape[0]
         fm = fm.dropna(axis=1,thresh=nnd)
@@ -653,13 +654,13 @@ class CorrelationFrame():
         for m in labels:
             group[m] = CorrelationFrame._get_group(labels[m],classes,m)
 
-    def set_mgroups(self,classes):
+    def set_sgroups(self,classes):
         # Initialise the classes
-        self._mgroup_names = { i : ', '.join(c) for i, c in enumerate(classes) }
-        self._mgroup_names[-1] = 'N/A'
+        self._sgroup_names = { i : ', '.join(c) for i, c in enumerate(classes) }
+        self._sgroup_names[-1] = 'N/A'
 
-        self._mgroup_ids = { m : -1 for m in self._mlabels }
-        CorrelationFrame._set_groups(classes,self._mlabels,self._mgroup_names,self._mgroup_ids)
+        self._sgroup_ids = { m : -1 for m in self._slabels }
+        CorrelationFrame._set_groups(classes,self._slabels,self._sgroup_names,self._sgroup_ids)
             
 
     def set_dgroups(self,classes):
@@ -679,12 +680,25 @@ class CorrelationFrame():
             names = self._ddf.columns
         return [self._dgroup_names[i] for i in self.get_dgroup_ids(names)]
 
-    def get_mgroup_ids(self,names=None):
+    def get_sgroup_ids(self,names=None):
         if names is None:
             names = self._mdf.columns
-        return [self._mgroup_ids[n] for n in names]
+        return [self._sgroup_ids[n] for n in names]
 
-    def get_mgroup_names(self,names=None):
+    def get_sgroup_names(self,names=None):
         if names is None:
             names = self._mdf.columns
-        return [self._mgroup_names[i] for i in self.get_mgroup_ids(names)]
+        return [self._sgroup_names[i] for i in self.get_sgroup_ids(names)]
+
+    def relabel_statistics(self,names,labels):
+        assert len(names) == len(labels), 'Length of statistics must equal length of labels.'
+        for n, l in zip(names,labels):
+            try:
+                self._slabels[n] = l
+            except AttributeError:
+                self._slabels = {n: l}
+
+    def relabel_data(self,names,labels):
+        assert len(names) == len(labels), 'Length of datasets must equal length of labels.'
+        for n, l in zip(names,labels):
+            self._dlabels[n] = l

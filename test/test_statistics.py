@@ -151,7 +151,7 @@ def test_ccm():
     https://sugiharalab.github.io/EDM_Documentation/algorithms_high_level/
     """
     # Load our wrapper
-    from pynats.temporal import ccm
+    from pynats.statistics.causal import ccm
 
     # Load anchovy dataset
     from pyEDM import sampleData
@@ -186,29 +186,6 @@ def test_load():
     with open('test.pkl', 'wb') as f:
         dill.dump(calc,f)
 
-def test_simple_correlation():
-    inddat = get_inddata()
-    depdat = get_data()
-    calc = Calculator()
-    for m in calc._statistics:
-        try:
-            x, y = depdat.to_numpy()[[0,1]]
-            _, y_ind = inddat.to_numpy()[[0,1]]
-
-            try:
-                dep = m.bivariate(x,y)
-                ind = m.bivariate(x,y_ind)
-            except NotImplementedError:
-                a = m.adjacency([x,y])
-                dep = a[0,1]
-                a = m.adjacency([x,y_ind])
-                ind = a[0,1]
-
-            if dep < ind:
-                warnings.warn(f"{m.name} has ``strength'' of interaction running counter-intuitive: verify that {dep} should or can be less than {ind}.")
-        except AssertionError as e:
-            print(f'{m.name} failed simple correlation test: {e}')
-
 def test_group():
 
     calc = Calculator(labels=['hello','world','friend'])
@@ -224,35 +201,12 @@ def test_group():
     assert calc.group is None
     assert calc.group_name is None
 
-def test_corr_mi():
-    # Load our wrapper
-    from pynats.correlation import pearsonr
-    from pynats.infotheory import mutual_info
-
-    # Load Tuebingen dataset
-    from cdt.data import load_dataset
-    t_data, _ = load_dataset('tuebingen')
-    src, targ = t_data['A']['pair1'], t_data['B']['pair1']
-
-    rcalc = pearsonr(squared=True)
-    micalc = mutual_info(estimator='gaussian')
-    
-    data = np.concatenate((np.atleast_2d(src),np.atleast_2d(targ)),axis=0)
-
-    r2 = rcalc.adjacency(data)[0,1]
-    i = micalc.bivariate(src,targ)
-
-    assert i == pytest.approx(-0.5*np.log(1-r2), rel=1e-1, abs=1e-2), (f'Correlation and MI are not equal: {i} != -0.5 log(1-{r2})')
-
 if __name__ == '__main__':
 
     test_yaml()
     test_load()
     test_group()
     test_adjacency()
-
-    test_corr_mi()
-    test_simple_correlation()
 
     # This was a bit tricky to implement so just ensuring it passes a test from the creator's website
     test_ccm()
