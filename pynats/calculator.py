@@ -6,7 +6,6 @@ from tqdm import tqdm
 from collections import Counter
 from copy import deepcopy
 from logging import getLogger
-import dask.dataframe as dd
 
 # From this package
 from .data import Data
@@ -302,7 +301,7 @@ class Calculator():
         edges[:-1:2] = [f'{i}->{j}' for i, j in zip(*il)]
         edges[1::2] = [f'{j}->{i}' for i, j in zip(*il)]
 
-        df = dd.DataFrame(flatmat, index=edges, columns=self._statnames)
+        df = pd.DataFrame(flatmat, index=edges, columns=self._statnames)
         df.columns.name = 'Bivariate statistic'
         df.index.name = 'Edges'
         return df
@@ -319,15 +318,15 @@ class Calculator():
         edges = self.flatten(**flatten_kwargs).abs()
 
         # Correlate the edge matrix (using pearson and/or spearman correlation)
-        mdf = dd.DataFrame()
+        mdf = pd.DataFrame()
         if 'pearson' in which_stat:
             pmat = edges.corr(method='pearson')
-            pmat.index = dd.MultiIndex.from_tuples([('pearson',m) for m in pmat.index],names=['Type','Source statistic'])
+            pmat.index = pd.MultiIndex.from_tuples([('pearson',m) for m in pmat.index],names=['Type','Source statistic'])
             pmat.columns.name = 'Target statistic'
             mdf = pmat
         if 'spearman' in which_stat:
             spmat = edges.corr(method='spearman')
-            spmat.index = dd.MultiIndex.from_tuples([('spearman',m) for m in spmat.index],names=['Type','Source statistic'])
+            spmat.index = pd.MultiIndex.from_tuples([('spearman',m) for m in spmat.index],names=['Type','Source statistic'])
             spmat.columns.name = 'Target statistic'
             mdf = mdf.append(spmat)
 
@@ -335,6 +334,17 @@ class Calculator():
             return mdf, self.getstatlabels()
         else:
             return mdf
+    
+    def communities(self,flatten_kwargs={}):
+        if not hasattr(self,'_mdf'):
+            self._mdf = pd.DataFrame()
+            for calc in [c[0] for c in self.calculators.values]:
+                corrmat = calc.correlation_matrix(**flatten_kwargs)
+
+                # Adds another hierarchical level giving the dataset name
+                df2 = pd.concat({calc.name: corrmat}, names=['Dataset']) 
+                self._mdf = self._mdf.append(df2)
+        return self._mdf
 
 """ CalculatorFrame
 Container for batch level commands, like computing/pruning/initialising multiple datasets at once
@@ -498,19 +508,19 @@ class CalculatorFrame():
             mlabels = {}
             dlabels = {}
 
-        mdf = dd.DataFrame()
+        mdf = pd.DataFrame()
         for calc in [c[0] for c in self.calculators.values]:
             out = calc.get_correlation_df(with_labels=with_labels,flatten_kwargs=flatten_kwargs,**kwargs)
 
             if with_labels:
-                df2 = dd.concat({calc.name: out[0]}, names=['Dataset']) 
+                df2 = pd.concat({calc.name: out[0]}, names=['Dataset']) 
                 try:
                     mlabels = mlabels | out[1]
                 except TypeError:
                     mlabels.update(out[1])
                 dlabels[calc.name] = calc.labels
             else:
-                df2 = dd.concat({calc.name: out}, names=['Dataset']) 
+                df2 = pd.concat({calc.name: out}, names=['Dataset']) 
 
             # Adds another hierarchical level giving the dataset name
             mdf = mdf.append(df2)
@@ -525,7 +535,7 @@ class CorrelationFrame():
     def __init__(self,cf=None,flatten_kwargs={},**kwargs):
         self._slabels = {}
         self._dlabels = {}
-        self._mdf = dd.DataFrame()
+        self._mdf = pd.DataFrame()
         
         if cf is not None:
             if isinstance(cf,CalculatorFrame) or isinstance(cf,Calculator):
@@ -586,7 +596,9 @@ class CorrelationFrame():
         raise AttributeError('Do not directly set the dlabels attribute.')
 
     def merge(self,other):
-        self._mdf = self._mdf.append(other.mdf)
+        self._mdf = self._mdf.append(other.mdf,verify_integrity=True)
+        self._ddf = self._ddf.join(other.ddf)
+
         try:
             self._slabels = self._slabels | other.mlabels
             self._dlabels = self._dlabels | other.dlabels
@@ -594,19 +606,16 @@ class CorrelationFrame():
             self._slabels.update(other.mlabels)
             self._dlabels.update(other.dlabels)
 
-        # Make sure to re-run this otherwise we'll have the old one
-        self._ddf = convert_mdf_to_ddf(self.mdf)
-
-    def get_feature_matrix(self,mthresh=0.8,dthresh=0.2):
+    def get_feature_matrix(self,sthresh=0.8,dthresh=0.2):
         fm = self.ddf.drop_duplicates()
             
-        # Drop datasets that are mostly NaNs
-        nnd = dthresh*fm.shape[0]
-        fm = fm.dropna(axis=1,thresh=nnd)
+        # Drop datasets based on NaN threshold
+        num_dnans = dthresh*fm.shape[0]
+        fm = fm.dropna(axis=1,thresh=num_dnans)
 
-        # Drop measures that are mostly NaNs
-        nnm = mthresh*fm.shape[1]
-        fm = fm.dropna(axis=0,thresh=nnm)
+        # Drop measures based on NaN threshold
+        num_snans = sthresh*fm.shape[1]
+        fm = fm.dropna(axis=0,thresh=num_snans)
         return fm
 
     @staticmethod
