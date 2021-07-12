@@ -1,5 +1,6 @@
 pynats.egg-info
 pynats/__pycache__
+pynats/statistics/__pycache__
 build
 dist
 test/__pycache__

@@ -306,7 +306,7 @@ class transfer_entropy(jidt_base,directed):
 
     humanname = "Transfer entropy"
     name = 'te'
-    labels = ['unsigned','infotheory','temporal','directed']
+    labels = ['unsigned','embedding','infotheory','temporal','directed']
 
     def __init__(self,auto_embed_method=None,k_search_max=None,tau_search_max=None,
                         k_history=1,k_tau=1,l_history=1,l_tau=1,**kwargs):

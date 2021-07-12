@@ -101,5 +101,5 @@ def standardise(a, dimension=0, df=1):
         return (a - a.mean(axis=dimension)) / a_sd
 
 def convert_mdf_to_ddf(df):
-    ddf = pd.pivot_table(df.stack(dropna=False).reset_index(),index='Dataset',columns=['Type','Source statistic','Target statistic'],dropna=False).T.droplevel(0).reorder_levels([1,2,0])
+    ddf = df.stack(dropna=False).reset_index().pivot(index='Dataset',columns=['Type','Source statistic','Target statistic'],dropna=False).T.droplevel(0).reorder_levels([1,2,0])
     return ddf

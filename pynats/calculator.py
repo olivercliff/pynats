@@ -6,6 +6,7 @@ from tqdm import tqdm
 from collections import Counter
 from copy import deepcopy
 from logging import getLogger
+import dask.dataframe as dd
 
 # From this package
 from .data import Data
@@ -301,7 +302,7 @@ class Calculator():
         edges[:-1:2] = [f'{i}->{j}' for i, j in zip(*il)]
         edges[1::2] = [f'{j}->{i}' for i, j in zip(*il)]
 
-        df = pd.DataFrame(flatmat, index=edges, columns=self._statnames)
+        df = dd.DataFrame(flatmat, index=edges, columns=self._statnames)
         df.columns.name = 'Bivariate statistic'
         df.index.name = 'Edges'
         return df
@@ -318,15 +319,15 @@ class Calculator():
         edges = self.flatten(**flatten_kwargs).abs()
 
         # Correlate the edge matrix (using pearson and/or spearman correlation)
-        mdf = pd.DataFrame()
+        mdf = dd.DataFrame()
         if 'pearson' in which_stat:
             pmat = edges.corr(method='pearson')
-            pmat.index = pd.MultiIndex.from_tuples([('pearson',m) for m in pmat.index],names=['Type','Source statistic'])
+            pmat.index = dd.MultiIndex.from_tuples([('pearson',m) for m in pmat.index],names=['Type','Source statistic'])
             pmat.columns.name = 'Target statistic'
             mdf = pmat
         if 'spearman' in which_stat:
             spmat = edges.corr(method='spearman')
-            spmat.index = pd.MultiIndex.from_tuples([('spearman',m) for m in spmat.index],names=['Type','Source statistic'])
+            spmat.index = dd.MultiIndex.from_tuples([('spearman',m) for m in spmat.index],names=['Type','Source statistic'])
             spmat.columns.name = 'Target statistic'
             mdf = mdf.append(spmat)
 
@@ -334,17 +335,6 @@ class Calculator():
             return mdf, self.getstatlabels()
         else:
             return mdf
-    
-    def communities(self,flatten_kwargs={}):
-        if not hasattr(self,'_mdf'):
-            self._mdf = pd.DataFrame()
-            for calc in [c[0] for c in self.calculators.values]:
-                corrmat = calc.correlation_matrix(**flatten_kwargs)
-
-                # Adds another hierarchical level giving the dataset name
-                df2 = pd.concat({calc.name: corrmat}, names=['Dataset']) 
-                self._mdf = self._mdf.append(df2)
-        return self._mdf
 
 """ CalculatorFrame
 Container for batch level commands, like computing/pruning/initialising multiple datasets at once
@@ -508,19 +498,19 @@ class CalculatorFrame():
             mlabels = {}
             dlabels = {}
 
-        mdf = pd.DataFrame()
+        mdf = dd.DataFrame()
         for calc in [c[0] for c in self.calculators.values]:
             out = calc.get_correlation_df(with_labels=with_labels,flatten_kwargs=flatten_kwargs,**kwargs)
 
             if with_labels:
-                df2 = pd.concat({calc.name: out[0]}, names=['Dataset']) 
+                df2 = dd.concat({calc.name: out[0]}, names=['Dataset']) 
                 try:
                     mlabels = mlabels | out[1]
                 except TypeError:
                     mlabels.update(out[1])
                 dlabels[calc.name] = calc.labels
             else:
-                df2 = pd.concat({calc.name: out}, names=['Dataset']) 
+                df2 = dd.concat({calc.name: out}, names=['Dataset']) 
 
             # Adds another hierarchical level giving the dataset name
             mdf = mdf.append(df2)
@@ -535,7 +525,7 @@ class CorrelationFrame():
     def __init__(self,cf=None,flatten_kwargs={},**kwargs):
         self._slabels = {}
         self._dlabels = {}
-        self._mdf = pd.DataFrame()
+        self._mdf = dd.DataFrame()
         
         if cf is not None:
             if isinstance(cf,CalculatorFrame) or isinstance(cf,Calculator):
