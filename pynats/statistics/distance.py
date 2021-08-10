@@ -16,7 +16,7 @@ class hsic(undirected,unsigned):
 
     humanname = "Hilbert-Schmidt Independence Criterion"
     name = 'hsic'
-    labels = ['distance','unordered','nonlinear','undirected']
+    labels = ['unsigned','distance','unordered','nonlinear','undirected']
 
     def __init__(self,biased=False):
         self._biased = biased
@@ -35,7 +35,7 @@ class hhg(directed,unsigned):
 
     humanname = "Heller-Heller-Gorfine Independence Criterion"
     name = 'hhg'
-    labels = ['distance','unordered','nonlinear','directed']
+    labels = ['unsigned','distance','unordered','nonlinear','directed']
 
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):
@@ -49,7 +49,7 @@ class dcorr(undirected,unsigned):
 
     humanname = "Distance correlation"
     name = 'dcorr'
-    labels = ['distance','unordered','nonlinear','undirected']
+    labels = ['unsigned','distance','unordered','nonlinear','undirected']
 
     def __init__(self,biased=False):
         self._biased = biased
@@ -70,7 +70,7 @@ class mgc(undirected,unsigned):
 
     humanname = "Multiscale graph correlation"
     name = "mgc"
-    labels = ['distance','unordered','nonlinear','undirected']
+    labels = ['distance','unsigned','unordered','nonlinear','undirected']
 
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):
@@ -85,7 +85,7 @@ class dcorrx(directed,unsigned):
 
     humanname = "Cross-distance correlation"
     name = "dcorrx"
-    labels = ['distance','temporal','directed','nonlinear']
+    labels = ['distance','unsigned','temporal','directed','nonlinear']
 
     def __init__(self,max_lag=1):
         self._max_lag = max_lag

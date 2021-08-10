@@ -105,7 +105,7 @@ class icoherence(mne,undirected):
         self._measure = 'imcoh'
         super().__init__(**kwargs)
 
-class phase_locking_value(mne,directed):
+class phase_locking_value(mne,undirected):
     humanname = 'Phase locking value (wavelet)'
     labels = ['unsigned','wavelet','undirected']
 

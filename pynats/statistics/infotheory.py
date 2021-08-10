@@ -101,8 +101,7 @@ class jidt_base(unsigned):
         elif self._estimator == 'kraskov':
             calc.setProperty(self._NNK_PROP_NAME,str(self._prop_k))
 
-        calc.setProperty(self._NORMALISE, 'true')
-        calc.setProperty(self._BIAS_CORRECTION, 'true')
+        calc.setProperty(self._BIAS_CORRECTION, 'false')
 
         return calc
 

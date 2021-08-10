@@ -6,6 +6,7 @@ from tqdm import tqdm
 from collections import Counter
 from copy import deepcopy
 from logging import getLogger
+from scipy import stats
 
 # From this package
 from .data import Data
@@ -508,27 +509,30 @@ class CalculatorFrame():
             mlabels = {}
             dlabels = {}
 
+        shapes = pd.DataFrame()
         mdf = pd.DataFrame()
         for calc in [c[0] for c in self.calculators.values]:
             out = calc.get_correlation_df(with_labels=with_labels,flatten_kwargs=flatten_kwargs,**kwargs)
 
+            s = pd.Series(dict(n_processes=calc.dataset.n_processes,n_samples=calc.dataset.n_samples))
+            shapes = shapes.append(pd.concat({calc.name: s}, names=['Dataset']))
             if with_labels:
-                df2 = pd.concat({calc.name: out[0]}, names=['Dataset']) 
+                df = pd.concat({calc.name: out[0]}, names=['Dataset']) 
                 try:
                     mlabels = mlabels | out[1]
                 except TypeError:
                     mlabels.update(out[1])
                 dlabels[calc.name] = calc.labels
             else:
-                df2 = pd.concat({calc.name: out}, names=['Dataset']) 
+                df = pd.concat({calc.name: out}, names=['Dataset']) 
 
             # Adds another hierarchical level giving the dataset name
-            mdf = mdf.append(df2)
+            mdf = mdf.append(df)
 
         if with_labels:
-            return mdf, mlabels, dlabels
+            return mdf, shapes, mlabels, dlabels
         else:
-            return mdf
+            return mdf, shapes
 
 class CorrelationFrame():
 
@@ -536,12 +540,13 @@ class CorrelationFrame():
         self._slabels = {}
         self._dlabels = {}
         self._mdf = pd.DataFrame()
+        self._shapes = pd.DataFrame()
         
         if cf is not None:
             if isinstance(cf,CalculatorFrame) or isinstance(cf,Calculator):
                 cf = CalculatorFrame(cf)
                 # Store the statistic-focused dataframe, statistic labels, and dataset labels
-                self._mdf, self._slabels, self._dlabels = cf.get_correlation_df(with_labels=True,flatten_kwargs=flatten_kwargs,**kwargs)
+                self._mdf, self._shapes, self._slabels, self._dlabels = cf.get_correlation_df(with_labels=True,flatten_kwargs=flatten_kwargs,**kwargs)
                 self._name = cf.name
             else:
                 self.merge(cf)
@@ -556,6 +561,10 @@ class CorrelationFrame():
     @name.setter
     def name(self,n):
         self._name = n
+
+    @property
+    def shapes(self):
+        return self._shapes
 
     @property
     def mdf(self):
@@ -598,6 +607,7 @@ class CorrelationFrame():
     def merge(self,other):
         self._mdf = self._mdf.append(other.mdf,verify_integrity=True)
         self._ddf = self._ddf.join(other.ddf)
+        self._shapes = self._shapes.append(other.shapes)
 
         try:
             self._slabels = self._slabels | other.mlabels
@@ -605,6 +615,51 @@ class CorrelationFrame():
         except TypeError:
             self._slabels.update(other.mlabels)
             self._dlabels.update(other.dlabels)
+
+    def get_pvalues(self):
+        if not hasattr(self,'_pvalues'):
+            n = self.shapes['n_observations']
+            nstats = self.mdf.shape[1]
+            ns = pd.concat([n.repeat(nstats)]*nstats,axis=1)
+            rs = self.mdf.abs()
+            rs[rs==0] = 1e-12
+            rdem = (1-rs**2)
+            rdem[rdem==0] = 1e-12
+            tt = rs.values*np.sqrt((ns.values-2)/rdem.values)
+            self._pvalues = stats.t.sf(tt, ns.values-1)*2
+        return pd.DataFrame(data=self._pvalues,index=self.mdf.index,columns=self.mdf.columns)
+
+    def compute_significant_values(self):
+        pvals = self.get_pvalues()
+        nstats = self.mdf.shape[1]
+        self._insig_ind = pvals > 0.05 / nstats / (nstats-1) / 2
+        
+        if not hasattr(self,'_insig_group'):
+            pvals = pvals.droplevel(['Dataset','Type'])
+            group_pvalue = pd.DataFrame(data=np.full([pvals.columns.size]*2,np.nan),columns=pvals.columns,index=pvals.columns)
+            for f1 in pvals.columns:
+                print(f'Computing significance for {f1}...')
+                for f2 in [f for f in pvals.columns if f is not f1 and np.isnan(group_pvalue[f1][f])]:
+                    group_pvalue[f1][f2] = stats.combine_pvalues(pvals[f1][f2])[1]
+                    group_pvalue[f2][f1] = group_pvalue[f1][f2]
+            self._insig_group = group_pvalue > 0.05
+
+    def get_average_correlation(self,thresh=0.2,absolute=True,statistic='mean',remove_insig=False):
+        mdf = copy.deepcopy(self.mdf)
+        # if remove_insig:
+        #     mdf[self._insig_ind] = np.nan
+
+        if absolute:
+            ss_adj = getattr(mdf.abs().groupby('Source statistic'),statistic)()
+        else:
+            ss_adj = getattr(mdf.groupby('Source statistic'),statistic)()
+
+        if remove_insig:
+            ss_adj[self._insig_group] = np.nan
+
+        ss_adj = ss_adj.dropna(thresh=ss_adj.shape[0]*thresh,axis=0).dropna(thresh=ss_adj.shape[1]*thresh,axis=1).sort_index(axis=1)
+
+        return ss_adj
 
     def get_feature_matrix(self,sthresh=0.8,dthresh=0.2):
         fm = self.ddf.drop_duplicates()
@@ -638,13 +693,13 @@ class CorrelationFrame():
 
         # Iterate through all 
         if np.count_nonzero(matches) > 1:
-            warnings.warn(f'More than one match in for {instance} (whilst searching for {classes} within {labels}). Choosing first one.')
+            print(f'More than one match in for {instance} whilst searching for {classes} within {labels}). Choosing first one.')
         
         try:
             myid = np.where(matches)[0][0]
             return myid
         except (TypeError,IndexError):
-            print(f'{instance} has no match in {classes}.')
+            print(f'{instance} has no match in {classes}. Options are {labels}')
             return -1
 
     @staticmethod

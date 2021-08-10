@@ -10,10 +10,10 @@ class covariance_estimators(undirected,signed):
     Information on covariance estimators at: https://scikit-learn.org/stable/modules/covariance.html
     """
 
-    humanname = "Pearon's product-moment correlation coefficient"
+    humanname = "Covariance"
     labels = ['basic','unordered','linear','undirected']
 
-    def __init__(self,kind,estimator='EmpiricalCovariance',normalise=True,squared=False,normalised=True):
+    def __init__(self,kind,estimator='EmpiricalCovariance',squared=False):
         paramstr = f'_{estimator}'
         if squared:
             paramstr = '-sq' + paramstr
@@ -25,7 +25,6 @@ class covariance_estimators(undirected,signed):
         self._squared = squared
         self._estimator = estimator
         self._kind = kind
-        self._normalise = normalise
 
     def _from_cache(self,data):
         try:
@@ -46,9 +45,6 @@ class covariance_estimators(undirected,signed):
     def adjacency(self,data):
         mycov = self._from_cache(data)
         matrix = getattr(mycov,self._kind+'_')
-        if self._normalise:
-            automat = np.power(np.diag(np.diag(matrix)),-0.5,where=np.eye(matrix.shape[0])>0)
-            matrix = np.matmul(np.matmul(automat, matrix), automat)
         np.fill_diagonal(matrix,np.nan)
         if self._squared:
             return np.square(matrix)

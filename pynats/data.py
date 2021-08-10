@@ -195,7 +195,7 @@ class Data():
             data = data[:,:n_observations]
 
         if self.normalise:
-            data = zscore(data,axis=1,nan_policy='omit')
+            data = zscore(data,axis=1,nan_policy='omit',ddof=1)
 
         nans = np.isnan(data)
         if nans.any():
