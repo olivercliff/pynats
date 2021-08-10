@@ -7,8 +7,10 @@ import matplotlib.pyplot as plt
 
 import seaborn as sns
 
-data = Data.load_dataset('forex')
-calc = Calculator(dataset=data)
+data = Data(data='/home/oliver/Workspace/code/research/mvts-comparison/database/finance/SNP500/SNP500_N-367_P-11_2011-11-26-lr.npy')
+
+# data = Data.load_dataset('forex')
+calc = Calculator(dataset=data,dim_order='sp')
 calc.compute()
 
 corrmat = calc.flatten().corr(method='spearman').dropna(axis=0,how='all').dropna(axis=1,how='all')
