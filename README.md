@@ -171,8 +171,9 @@ The shorthand for each parameter (LHS of the table) is appended to the function 
 
 ```
 git clone https://github.com/olivercliff/pynats.git 
+conda create -n pynats python=3.9.0
+conda activate pynats
 cd pynats
-conda create -n pynats -f environment.yml
 pip install .
 python demos/demo.py
 ```
