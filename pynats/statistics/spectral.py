@@ -254,9 +254,9 @@ class direct_directed_transfer_function(kramer_bv,directed):
         super().__init__(**kwargs)
         self._measure = 'direct_directed_transfer_function'
 
-class phase_slope_index(kramer_mv,directed):
+class phase_slope_index(kramer_mv,undirected):
     humanname = 'Phase slope index'
-    labels = ['unsigned','spectral','directed']
+    labels = ['unsigned','spectral','undirected']
 
     def __init__(self,**kwargs):
         self.name = 'psi'

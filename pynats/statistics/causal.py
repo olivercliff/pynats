@@ -4,7 +4,7 @@ import pyEDM
 import numpy as np
 import pandas as pd
 
-from pynats.base import directed, undirected, parse_bivariate, parse_multivariate, unsigned
+from pynats.base import directed, undirected, parse_bivariate, parse_multivariate, unsigned, signed
 
 class anm(directed,unsigned):
 
@@ -50,22 +50,17 @@ class igci(directed,unsigned):
         z = data.to_numpy()
         return IGCI().predict_proba((z[i],z[j]))
 
-class ccm(directed,unsigned):
+class ccm(directed,signed):
 
     humanname = "Convergent cross-maping"
     name = "ccm"
-    labels = ['causal','directed','nonlinear','temporal']
+    labels = ['causal','directed','nonlinear','temporal','signed']
 
     def __init__(self,statistic='mean',embedding_dimension=None):
         self._statistic = statistic
         self._E = embedding_dimension
 
         self.name += f'_E-{embedding_dimension}_{statistic}'
-        if statistic == 'diff':
-            self.issigned = lambda : True
-            self.labels = ccm.labels + ['signed']
-        else:
-            self.labels = ccm.labels + ['unsigned']
 
     @property
     def key(self):

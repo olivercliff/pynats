@@ -159,9 +159,9 @@ class debiased_weighted_squared_phase_lag_index(mne,undirected):
         self._measure = 'wpli2_debiased'
         super().__init__(**kwargs)
 
-class phase_slope_index(mne,directed):
+class phase_slope_index(mne,undirected):
     humanname = 'Phase slope index (wavelet)'
-    labels = ['unsigned','wavelet','directed']
+    labels = ['unsigned','wavelet','undirected']
 
     def __init__(self,**kwargs):
         self.name = 'psi'

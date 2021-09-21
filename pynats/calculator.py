@@ -129,12 +129,12 @@ class Calculator():
                             print(f'[{len(self._statistics)}] Adding statistic {module_name}.{class_name}(x,y,{params})...')
                             self._statistics.append(self._classes[-1](**params))
                             self._statnames.append(self._statistics[-1].name)
-                            print('Succesfully initialised with identifier "{}"'.format(self._statistics[-1].name))
+                            print(f'Succesfully initialised with identifier "{self._statistics[-1].name}" and labels {self._statistics[-1].labels}')
                     else:
                         print(f'[{len(self._statistics)}] Adding statistic {module_name}.{class_name}(x,y)...')
                         self._statistics.append(self._classes[-1]())
                         self._statnames.append(self._statistics[-1].name)
-                        print('Succesfully initialised with identifier "{}"'.format(self._statistics[-1].name))
+                        print(f'Succesfully initialised with identifier "{self._statistics[-1].name}" and labels {self._statistics[-1].labels}')
 
     def load_dataset(self,dataset):
         if not isinstance(dataset,Data):
@@ -335,17 +335,6 @@ class Calculator():
             return mdf, self.getstatlabels()
         else:
             return mdf
-    
-    def communities(self,flatten_kwargs={}):
-        if not hasattr(self,'_mdf'):
-            self._mdf = pd.DataFrame()
-            for calc in [c[0] for c in self.calculators.values]:
-                corrmat = calc.correlation_matrix(**flatten_kwargs)
-
-                # Adds another hierarchical level giving the dataset name
-                df2 = pd.concat({calc.name: corrmat}, names=['Dataset']) 
-                self._mdf = self._mdf.append(df2)
-        return self._mdf
 
 """ CalculatorFrame
 Container for batch level commands, like computing/pruning/initialising multiple datasets at once
@@ -514,8 +503,13 @@ class CalculatorFrame():
         for calc in [c[0] for c in self.calculators.values]:
             out = calc.get_correlation_df(with_labels=with_labels,flatten_kwargs=flatten_kwargs,**kwargs)
 
-            s = pd.Series(dict(n_processes=calc.dataset.n_processes,n_samples=calc.dataset.n_samples))
-            shapes = shapes.append(pd.concat({calc.name: s}, names=['Dataset']))
+            s = pd.Series(dict(n_processes=calc.dataset.n_processes,n_observations=calc.dataset.n_observations))
+            if calc.name is not None:
+                s.name = calc.name
+                shapes = shapes.append(s)
+            else:
+                s.name = 'N/A'
+                shapes = shapes.append(s)
             if with_labels:
                 df = pd.concat({calc.name: out[0]}, names=['Dataset']) 
                 try:
@@ -528,11 +522,12 @@ class CalculatorFrame():
 
             # Adds another hierarchical level giving the dataset name
             mdf = mdf.append(df)
+        shapes.index.name = 'Dataset'
 
         if with_labels:
-            return mdf, shapes, mlabels, dlabels
+            return mdf, nandf, shapes, mlabels, dlabels
         else:
-            return mdf, shapes
+            return mdf, nandf, shapes
 
 class CorrelationFrame():
 
@@ -572,7 +567,7 @@ class CorrelationFrame():
 
     @property
     def ddf(self):
-        if not hasattr(self,'_ddf'):
+        if not hasattr(self,'_ddf') or self._ddf.size != self._mdf.size:
             self._ddf = convert_mdf_to_ddf(self.mdf)
         return self._ddf
     
@@ -605,8 +600,9 @@ class CorrelationFrame():
         raise AttributeError('Do not directly set the dlabels attribute.')
 
     def merge(self,other):
+        
+        self._ddf = self.ddf.join(other.ddf)
         self._mdf = self._mdf.append(other.mdf,verify_integrity=True)
-        self._ddf = self._ddf.join(other.ddf)
         self._shapes = self._shapes.append(other.shapes)
 
         try:
@@ -620,13 +616,10 @@ class CorrelationFrame():
         if not hasattr(self,'_pvalues'):
             n = self.shapes['n_observations']
             nstats = self.mdf.shape[1]
-            ns = pd.concat([n.repeat(nstats)]*nstats,axis=1)
-            rs = self.mdf.abs()
-            rs[rs==0] = 1e-12
-            rdem = (1-rs**2)
-            rdem[rdem==0] = 1e-12
-            tt = rs.values*np.sqrt((ns.values-2)/rdem.values)
-            self._pvalues = stats.t.sf(tt, ns.values-1)*2
+            ns = np.repeat(n.values,nstats**2).reshape(self.mdf.shape[0],self.mdf.shape[1])
+            rsq = self.mdf.values**2
+            fval = ns * rsq / (1-rsq)
+            self._pvalues = stats.f.sf(fval, 1, ns-1)
         return pd.DataFrame(data=self._pvalues,index=self.mdf.index,columns=self.mdf.columns)
 
     def compute_significant_values(self):
@@ -640,7 +633,8 @@ class CorrelationFrame():
             for f1 in pvals.columns:
                 print(f'Computing significance for {f1}...')
                 for f2 in [f for f in pvals.columns if f is not f1 and np.isnan(group_pvalue[f1][f])]:
-                    group_pvalue[f1][f2] = stats.combine_pvalues(pvals[f1][f2])[1]
+                    cp = pvals[f1][f2]
+                    group_pvalue[f1][f2] = stats.combine_pvalues(cp[~cp.isna()])[1]
                     group_pvalue[f2][f1] = group_pvalue[f1][f2]
             self._insig_group = group_pvalue > 0.05
 
@@ -653,11 +647,9 @@ class CorrelationFrame():
             ss_adj = getattr(mdf.abs().groupby('Source statistic'),statistic)()
         else:
             ss_adj = getattr(mdf.groupby('Source statistic'),statistic)()
-
-        if remove_insig:
-            ss_adj[self._insig_group] = np.nan
-
         ss_adj = ss_adj.dropna(thresh=ss_adj.shape[0]*thresh,axis=0).dropna(thresh=ss_adj.shape[1]*thresh,axis=1).sort_index(axis=1)
+        if remove_insig:
+            ss_adj[self._insig_group.sort_index()] = np.nan
 
         return ss_adj
 
@@ -687,19 +679,21 @@ class CorrelationFrame():
                 assert not set(i_cls).issubset(set(j_cls)), (f'Class {i_cls} is a subset of class {j_cls}.')
 
     @staticmethod
-    def _get_group(labels,classes,instance):
+    def _get_group(labels,classes,instance,verbose=False):
         labset = set(labels)
         matches = [set(cls).issubset(labset) for cls in classes]
 
         # Iterate through all 
         if np.count_nonzero(matches) > 1:
-            print(f'More than one match in for {instance} whilst searching for {classes} within {labels}). Choosing first one.')
+            if verbose:
+                print(f'More than one match in for {instance} whilst searching for {classes} within {labels}). Choosing first one.')
         
         try:
             myid = np.where(matches)[0][0]
             return myid
         except (TypeError,IndexError):
-            print(f'{instance} has no match in {classes}. Options are {labels}')
+            if verbose:
+                print(f'{instance} has no match in {classes}. Options are {labels}')
             return -1
 
     @staticmethod
