@@ -7,8 +7,8 @@ import pandas as pd
 from pynats import utils
 from scipy.stats import zscore
 import os
-from sktime.utils.load_data import load_from_tsfile_to_dataframe
-from sktime.utils.data_container import from_nested_to_3d_numpy
+from sktime.utils.data_io import load_from_tsfile_to_dataframe
+from sktime.datatypes._panel._convert import from_nested_to_3d_numpy
 
 VERBOSE = False
 
