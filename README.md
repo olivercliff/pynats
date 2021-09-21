@@ -2,14 +2,44 @@
 
 Python-based network analysis for time series.
 
+# Pre-installation
+
+The code requires GNU's [Octave](https://www.gnu.org/software/octave/index) by default. Install octave using your favourite package manager, e.g.,
+```
+apt-get install octave
+```
+for Ubuntu;
+```
+pacman -S octave
+```
+for Arch; and
+```
+brew install octave
+```
+
+for MacOS.
+
 # Installation
 
-Requires Octave if using the integrated information statistics.
+Download or clone the [latest version](https://github.com/olivercliff/pynats) from GitHub, unpack and run (from the folder containing `pynats` setup.py file):
+
+```
+pip install .
+```
+
+or 
+
+```
+pip install -e .
+```
+
+for editable mode.
+
+We recommend the [installation in a conda environment](#conda-install).
 
 ## Getting started
 
-When it's ready you'll be able to download it via `pip`
-> pip install pynats
+Check out the demo scripts in `demos/demo.py` and `demos/demo.ipynb`
 
 ## Issues
 
@@ -135,3 +165,14 @@ The shorthand for each parameter (LHS of the table) is appended to the function 
 | `fmax-X` | Maximum frequency for averaging  spectral/wavelet statistics (default: `nyquist = fs/2`) |
 | `order-X` | AR Order for parametric spectral Granger causality, choose `None` for optimisation by BIC (default: `None`) |
 | `cwt` | Continuous wavelet transformation (for spectral statistics) |
+
+
+# <a name="conda-install"></a>Conda installation
+
+```
+git clone https://github.com/olivercliff/pynats.git 
+cd pynats
+conda create -n pynats -f environment.yml
+pip install .
+python demos/demo.py
+```
