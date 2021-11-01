@@ -885,187 +885,186 @@
 # statistics that analyse in the wavlet-domain (only Mortlet wavelet's at the moment)
 .statistics.wavelet:
 
-  # Coherence (ordinal or squared? real components of the coherence)
-  coherence_magnitude:
-    - fs: 1
+  # coherence_magnitude:
+  #   - fs: 1
 
-    - fmin: 0
-      fmax: 0.25
+  #   - fmin: 0
+  #     fmax: 0.25
 
-    - fmin: 0.25
-      fmax: 0.5
+  #   - fmin: 0.25
+  #     fmax: 0.5
 
-    - fs: 1
-      statistic: max
+  #   - fs: 1
+  #     statistic: max
 
-    - fmin: 0
-      fmax: 0.25
-      statistic: max
+  #   - fmin: 0
+  #     fmax: 0.25
+  #     statistic: max
 
-    - fmin: 0.25
-      fmax: 0.5
-      statistic: max
+  #   - fmin: 0.25
+  #     fmax: 0.5
+  #     statistic: max
 
-  coherence_phase:
-    - fs: 1
+  # coherence_phase:
+  #   - fs: 1
 
-    - fmin: 0
-      fmax: 0.25
+  #   - fmin: 0
+  #     fmax: 0.25
 
-    - fmin: 0.25
-      fmax: 0.5
+  #   - fmin: 0.25
+  #     fmax: 0.5
 
-    - fs: 1
-      statistic: max
+  #   - fs: 1
+  #     statistic: max
 
-    - fmin: 0
-      fmax: 0.25
-      statistic: max
+  #   - fmin: 0
+  #     fmax: 0.25
+  #     statistic: max
 
-    - fmin: 0.25
-      fmax: 0.5
-      statistic: max
+  #   - fmin: 0.25
+  #     fmax: 0.5
+  #     statistic: max
 
-  # Coherence (ordinal or squared? imaginary components of the coherence)
-  icoherence:
-    - fs: 1
+  # # Coherence (ordinal or squared? imaginary components of the coherence)
+  # icoherence:
+  #   - fs: 1
 
-    - fmin: 0
-      fmax: 0.25
+  #   - fmin: 0
+  #     fmax: 0.25
 
-    - fmin: 0.25
-      fmax: 0.5
+  #   - fmin: 0.25
+  #     fmax: 0.5
 
-    - fs: 1
-      statistic: max
+  #   - fs: 1
+  #     statistic: max
 
-    - fmin: 0
-      fmax: 0.25
-      statistic: max
+  #   - fmin: 0
+  #     fmax: 0.25
+  #     statistic: max
 
-    - fmin: 0.25
-      fmax: 0.5
-      statistic: max
+  #   - fmin: 0.25
+  #     fmax: 0.5
+  #     statistic: max
 
-  phase_locking_value:
-    - fs: 1
+  # phase_locking_value:
+  #   - fs: 1
 
-    - fmin: 0
-      fmax: 0.25
+  #   - fmin: 0
+  #     fmax: 0.25
 
-    - fmin: 0.25
-      fmax: 0.5
+  #   - fmin: 0.25
+  #     fmax: 0.5
 
-    - fs: 1
-      statistic: max
+  #   - fs: 1
+  #     statistic: max
 
-    - fmin: 0
-      fmax: 0.25
-      statistic: max
+  #   - fmin: 0
+  #     fmax: 0.25
+  #     statistic: max
 
-    - fmin: 0.25
-      fmax: 0.5
-      statistic: max
+  #   - fmin: 0.25
+  #     fmax: 0.5
+  #     statistic: max
 
-  pairwise_phase_consistency:
-    - fs: 1
+  # pairwise_phase_consistency:
+  #   - fs: 1
 
-    - fmin: 0
-      fmax: 0.25
+  #   - fmin: 0
+  #     fmax: 0.25
 
-    - fmin: 0.25
-      fmax: 0.5
+  #   - fmin: 0.25
+  #     fmax: 0.5
 
-    - fs: 1
-      statistic: max
+  #   - fs: 1
+  #     statistic: max
 
-    - fmin: 0
-      fmax: 0.25
-      statistic: max
+  #   - fmin: 0
+  #     fmax: 0.25
+  #     statistic: max
 
-    - fmin: 0.25
-      fmax: 0.5
-      statistic: max
+  #   - fmin: 0.25
+  #     fmax: 0.5
+  #     statistic: max
 
-  phase_lag_index:
-    - fs: 1
+  # phase_lag_index:
+  #   - fs: 1
 
-    - fmin: 0
-      fmax: 0.25
+  #   - fmin: 0
+  #     fmax: 0.25
 
-    - fmin: 0.25
-      fmax: 0.5
+  #   - fmin: 0.25
+  #     fmax: 0.5
 
-    - fs: 1
-      statistic: max
+  #   - fs: 1
+  #     statistic: max
 
-    - fmin: 0
-      fmax: 0.25
-      statistic: max
+  #   - fmin: 0
+  #     fmax: 0.25
+  #     statistic: max
 
-    - fmin: 0.25
-      fmax: 0.5
-      statistic: max
+  #   - fmin: 0.25
+  #     fmax: 0.5
+  #     statistic: max
 
-  debiased_squared_phase_lag_index:
-    - fs: 1
+  # debiased_squared_phase_lag_index:
+  #   - fs: 1
 
-    - fmin: 0
-      fmax: 0.25
+  #   - fmin: 0
+  #     fmax: 0.25
 
-    - fmin: 0.25
-      fmax: 0.5
+  #   - fmin: 0.25
+  #     fmax: 0.5
 
-    - fs: 1
-      statistic: max
+  #   - fs: 1
+  #     statistic: max
 
-    - fmin: 0
-      fmax: 0.25
-      statistic: max
+  #   - fmin: 0
+  #     fmax: 0.25
+  #     statistic: max
 
-    - fmin: 0.25
-      fmax: 0.5
-      statistic: max
+  #   - fmin: 0.25
+  #     fmax: 0.5
+  #     statistic: max
 
-  weighted_phase_lag_index:
-    - fs: 1
+  # weighted_phase_lag_index:
+  #   - fs: 1
 
-    - fmin: 0
-      fmax: 0.25
+  #   - fmin: 0
+  #     fmax: 0.25
 
-    - fmin: 0.25
-      fmax: 0.5
+  #   - fmin: 0.25
+  #     fmax: 0.5
 
-    - fs: 1
-      statistic: max
+  #   - fs: 1
+  #     statistic: max
 
-    - fmin: 0
-      fmax: 0.25
-      statistic: max
+  #   - fmin: 0
+  #     fmax: 0.25
+  #     statistic: max
 
-    - fmin: 0.25
-      fmax: 0.5
-      statistic: max
+  #   - fmin: 0.25
+  #     fmax: 0.5
+  #     statistic: max
 
-  debiased_weighted_squared_phase_lag_index:
-    - fs: 1
+  # debiased_weighted_squared_phase_lag_index:
+  #   - fs: 1
 
-    - fmin: 0
-      fmax: 0.25
+  #   - fmin: 0
+  #     fmax: 0.25
 
-    - fmin: 0.25
-      fmax: 0.5
+  #   - fmin: 0.25
+  #     fmax: 0.5
 
-    - fs: 1
-      statistic: max
+  #   - fs: 1
+  #     statistic: max
 
-    - fmin: 0
-      fmax: 0.25
-      statistic: max
+  #   - fmin: 0
+  #     fmax: 0.25
+  #     statistic: max
 
-    - fmin: 0.25
-      fmax: 0.5
-      statistic: max
+  #   - fmin: 0.25
+  #     fmax: 0.5
+  #     statistic: max
 
   phase_slope_index:
     - fs: 1

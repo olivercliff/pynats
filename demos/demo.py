@@ -1,13 +1,14 @@
 # Load some of the packages
 import numpy as np
-
-from pynats.calculator import Calculator
-from pynats.data import load_dataset
+import os
+from pyspi.calculator import Calculator
+from pyspi.data import load_dataset
 import matplotlib.pyplot as plt
 
 import seaborn as sns
 
-calc = Calculator(dataset=load_dataset('forex'))
+configfile = os.path.dirname(os.path.abspath(__file__)) + '/config.yaml'
+calc = Calculator(dataset=load_dataset('forex'),configfile=configfile)
 calc.compute()
 
 corrmat = calc.flatten().corr(method='spearman').dropna(axis=0,how='all').dropna(axis=1,how='all')

@@ -1,10 +1,10 @@
 import numpy as np
 import spectral_connectivity as sc # For directed spectral statistics (excl. spectral GC) 
-from pynats.base import directed, parse_bivariate, undirected, parse_multivariate, unsigned
+from pyspi.base import directed, parse_bivariate, undirected, parse_multivariate, unsigned
 import nitime.analysis as nta
 import nitime.timeseries as ts
 import nitime.utils as tsu
-from mne.connectivity import envelope_correlation as pec
+import mne.connectivity as mnec
 import warnings
 
 """
@@ -383,7 +383,7 @@ class spectral_granger(kramer_mv,directed,unsigned):
 
 class envelope_correlation(undirected,unsigned):
     humanname = 'Power envelope correlation'
-    labels = ['unsigned','wavelet','undirected']
+    labels = ['unsigned','spectral','undirected']
 
     def __init__(self,orth=False,log=False,absolute=False):
         self.name = 'pec'
@@ -401,6 +401,6 @@ class envelope_correlation(undirected,unsigned):
     @parse_multivariate
     def adjacency(self, data):
         z = np.moveaxis(data.to_numpy(),2,0)
-        adj = np.squeeze(pec(z,orthogonalize=self._orth,log=self._log,absolute=self._absolute))
+        adj = np.squeeze(mnec.envelope_correlation(z,orthogonalize=self._orth,log=self._log,absolute=self._absolute))
         np.fill_diagonal(adj,np.nan)
         return adj

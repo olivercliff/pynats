@@ -3,9 +3,9 @@ import math
 import pytest
 import warnings
 
-from pynats.data import Data
-from pynats.calculator import Calculator
-from pynats.base import undirected
+from pyspi.data import Data
+from pyspi.calculator import Calculator
+from pyspi.base import undirected
 
 np.random.seed(0) # For reproducibility
 
@@ -151,7 +151,7 @@ def test_ccm():
     https://sugiharalab.github.io/EDM_Documentation/algorithms_high_level/
     """
     # Load our wrapper
-    from pynats.statistics.causal import ccm
+    from pyspi.statistics.causal import ccm
 
     # Load anchovy dataset
     from pyEDM import sampleData

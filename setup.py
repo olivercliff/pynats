@@ -7,7 +7,7 @@ with open('README.md') as file:
     long_description = file.read()
 
 setup(
-    name='pynats',
+    name='pyspi',
     packages=find_packages(),
     package_data={'': ['config.yaml',
                         'lib/jidt/infodynamics.jar',
@@ -31,7 +31,7 @@ setup(
     description='Network analysis for time series',
     author='Oliver M. Cliff',
     author_email='oliver.m.cliff@gmail.com',
-    url='https://github.com/olivercliff/pynats',
+    url='https://github.com/olivercliff/pyspi',
     long_description=long_description,
     classifiers=[
         "Programming Language :: Python",

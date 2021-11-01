@@ -1,5 +1,5 @@
-pynats.egg-info
-pynats/__pycache__
+pyspi.egg-info
+pyspi/__pycache__
 **/__pycache__/**
 build
 dist

@@ -1,7 +1,7 @@
 import jpype as jp
 import numpy as np
-from pynats import utils
-from pynats.base import directed, undirected, parse_univariate, parse_bivariate, unsigned
+from pyspi import utils
+from pyspi.base import directed, undirected, parse_univariate, parse_bivariate, unsigned
 
 from oct2py import octave, Struct
 import copy

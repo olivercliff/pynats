@@ -1,5 +1,5 @@
 import mne.connectivity as mnec
-from pynats.base import directed, parse_bivariate, undirected, parse_multivariate, unsigned
+from pyspi.base import directed, parse_bivariate, undirected, parse_multivariate, unsigned
 import numpy as np
 import warnings
 from functools import partial

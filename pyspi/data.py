@@ -4,7 +4,7 @@ Stolen mostly from IDTxL (for now...)
 """
 import numpy as np
 import pandas as pd
-from pynats import utils
+from pyspi import utils
 from scipy.stats import zscore
 import os
 from sktime.utils.data_io import load_from_tsfile_to_dataframe

@@ -1,7 +1,7 @@
 import sklearn.covariance as cov
 from scipy import stats, spatial, signal
 import numpy as np
-from pynats.base import undirected, directed, parse_bivariate, parse_multivariate, signed, unsigned
+from pyspi.base import undirected, directed, parse_bivariate, parse_multivariate, signed, unsigned
 import warnings
 
 class covariance_estimators(undirected,signed):

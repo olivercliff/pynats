@@ -5,7 +5,7 @@ import scipy.spatial.distance as distance
 import tslearn.metrics
 from tslearn.barycenters import euclidean_barycenter, dtw_barycenter_averaging, dtw_barycenter_averaging_subgradient, softdtw_barycenter
 
-from pynats.base import directed, undirected, parse_bivariate, unsigned, signed
+from pyspi.base import directed, undirected, parse_bivariate, unsigned, signed
 import numpy as np
 
 """ TODO: include optional kernels in each method

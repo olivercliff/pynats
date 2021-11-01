@@ -1,6 +1,6 @@
 """Test data class."""
 import numpy as np
-from pynats.data import Data
+from pyspi.data import Data
 from scipy.stats import zscore
 
 def test_data_properties():

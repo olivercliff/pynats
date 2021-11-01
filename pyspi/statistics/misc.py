@@ -3,7 +3,7 @@ from statsmodels.tsa.vector_ar.vecm import coint_johansen
 from sklearn.gaussian_process import kernels, GaussianProcessRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn import linear_model
-from pynats.base import directed, undirected, parse_bivariate, unsigned
+from pyspi.base import directed, undirected, parse_bivariate, unsigned
 import numpy as np
 import warnings
 

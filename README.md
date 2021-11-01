@@ -1,4 +1,4 @@
-# pynats
+# pyspi
 
 Python-based network analysis for time series.
 
@@ -21,7 +21,7 @@ for MacOS.
 
 # Installation
 
-Download or clone the [latest version](https://github.com/olivercliff/pynats) from GitHub, unpack and run (from the folder containing `pynats` setup.py file):
+Download or clone the [latest version](https://github.com/olivercliff/pyspi) from GitHub, unpack and run (from the folder containing `pyspi` setup.py file):
 
 ```
 pip install .
@@ -170,10 +170,10 @@ The shorthand for each parameter (LHS of the table) is appended to the function 
 # <a name="conda-install"></a>Conda installation
 
 ```
-git clone https://github.com/olivercliff/pynats.git 
-conda create -n pynats python=3.9.0
-conda activate pynats
-cd pynats
+git clone https://github.com/olivercliff/pyspi.git 
+conda create -n pyspi python=3.9.0
+conda activate pyspi
+cd pyspi
 pip install .
 python demos/demo.py
 ```

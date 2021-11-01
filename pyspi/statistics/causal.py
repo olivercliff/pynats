@@ -4,7 +4,7 @@ import pyEDM
 import numpy as np
 import pandas as pd
 
-from pynats.base import directed, undirected, parse_bivariate, parse_multivariate, unsigned, signed
+from pyspi.base import directed, undirected, parse_bivariate, parse_multivariate, unsigned, signed
 
 class anm(directed,unsigned):
 

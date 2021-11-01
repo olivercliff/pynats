@@ -1,5 +1,5 @@
 import numpy as np
-from pynats.data import Data
+from pyspi.data import Data
 import warnings, copy
 
 """
@@ -35,7 +35,7 @@ def parse_bivariate(function):
     def parsed_function(self,data,data2=None,i=None,j=None,inplace=True):
         if not isinstance(data,Data):
             if data2 is None:
-                raise TypeError('Input must be either a pynats.data object or two 1D-array inputs.'
+                raise TypeError('Input must be either a pyspi.data object or two 1D-array inputs.'
                                     f' Received {type(data)} and {type(data2)}.')                        
             data1 = data
             data = Data()
@@ -58,14 +58,14 @@ def parse_bivariate(function):
 def parse_multivariate(function):
     def parsed_function(self,data,inplace=True):
         if not isinstance(data,Data):
-            # Create a pynats.Data object from iterable data object
+            # Create a pyspi.Data object from iterable data object
             try:
                 procs = data
                 data = Data()
                 for p in procs:
                     data.add_process(p)
             except IndexError:
-                raise TypeError('Data must be either a pynats.data.Data object or an and iterable of numpy.ndarray''s.')
+                raise TypeError('Data must be either a pyspi.data.Data object or an and iterable of numpy.ndarray''s.')
         elif not inplace:
             # Ensure we don't write over the original
             data = copy.deepcopy(data)

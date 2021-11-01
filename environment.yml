@@ -1,4 +1,4 @@
-name: pynats
+name: pyspi
 channels:
   - conda-forge
   - defaults
@@ -8,4 +8,4 @@ dependencies:
   - dask
   - pylint
   - cairo
-prefix: /home/oliver/miniconda3/envs/pynats
+prefix: /home/oliver/miniconda3/envs/pyspi

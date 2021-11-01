@@ -1,9 +1,9 @@
 import numpy as np
 import math, pytest, warnings, yaml, os
 
-from pynats.data import Data
-from pynats.calculator import Calculator
-from pynats.base import undirected
+from pyspi.data import Data
+from pyspi.calculator import Calculator
+from pyspi.base import undirected
 
 configfilebase = os.path.dirname(__file__)
 configfile0 = configfilebase+'/config0.yaml'

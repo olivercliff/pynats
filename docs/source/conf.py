@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'pynats'
+project = 'pyspi'
 copyright = '2021, Oliver Cliff'
 author = 'Oliver Cliff'
 
